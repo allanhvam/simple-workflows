@@ -3,3 +3,5 @@ src
 .github
 ava.config.js
 tsconfig.json
+lib/tests/*
+lib/debug.js
