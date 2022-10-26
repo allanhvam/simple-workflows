@@ -1,0 +1,7 @@
+node_modules
+lib
+workflow-history
+*.tgz
+__blobstorage__
+__queuestorage__
+__azurite*
