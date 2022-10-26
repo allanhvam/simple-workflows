@@ -1,18 +1,22 @@
 {
   "name": "simple-workflows",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.1.0-beta0",
+  "description": "Workflows as code in TypeScript",
   "main": "lib/index.js",
   "engines": {
-    "node": ">=10.24.1"
+    "node": ">=14.19.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/allanhvam/simple-workflows.git"
   },
   "scripts": {
     "build": "npx tsc",
     "build-watch": "npx tsc -w",
     "test": "npx ava --timeout=2m"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Allan Hvam",
+  "license": "MIT",
   "devDependencies": {
     "@azure/data-tables": "^13.0.1",
     "@azure/storage-blob": "^12.10.0",

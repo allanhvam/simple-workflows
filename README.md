@@ -20,7 +20,7 @@ All activities is just normal functions that return promises, but must be idempo
 
 Example activity:
 
-```
+```ts
 export async function greet(name: string): Promise<string> {
     return `Hello, ${name}!`;
 }
@@ -30,7 +30,7 @@ export async function greet(name: string): Promise<string> {
 
 Workflows is build by activities. When activities is used in workflows, they must be passed to the `proxyActivities` function:
 
-```
+```ts
 import * as activities from '../activities';
 import { proxyActivities } from "simple-workflows";
 
@@ -43,7 +43,7 @@ export async function greetWorkflow(name: string): Promise<string> {
 
 # Getting started
 
-```
+```ts
 import { WorkflowWorker } from "simple-workflows";
 
 const worker = WorkflowWorker.getInstance();
@@ -57,3 +57,8 @@ console.log(`Started workflow ${handle.workflowId}`);
 
 let result = await handle.result();
 ```
+
+# Limitations
+
+- Workflows & activities is executed in the current process
+- Workflows & activities will not forcefully be stopped on timeout
