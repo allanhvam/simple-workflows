@@ -1,5 +1,5 @@
 src
 .vscode
 .github
-*.js
+ava.config.js
 tsconfig.json
