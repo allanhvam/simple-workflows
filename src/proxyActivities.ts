@@ -19,7 +19,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
             return async (...args: any[]) => {
                 let f = activities[activityType];
 
-                let context = Worker.asyncLocalStorage.getContext();
+                let context = Worker.asyncLocalStorage.getStore();
                 if (!context) {
                     throw new Error(`Workflow executed outside workflow context.`);
                 }

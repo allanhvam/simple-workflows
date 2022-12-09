@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "./AsyncLocalStorage";
+import { AsyncLocalStorage } from "async_hooks";
 import { IWorkflowContext } from "./IWorkflowContext";
 import { IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
 import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore";
@@ -41,7 +41,7 @@ export declare type WorkflowOptions = {
 export declare type WorkflowStartOptions<T extends Workflow = Workflow> = WithWorkflowArgs<T, WorkflowOptions>;
 
 export class Worker implements IWorker {
-    public static asyncLocalStorage: AsyncLocalStorage = new AsyncLocalStorage();
+    public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
     private static instance: IWorker;
 
     public store: IWorkflowHistoryStore = new MemoryWorkflowHistoryStore();
@@ -121,7 +121,7 @@ export class Worker implements IWorker {
             await store?.setInstance(workflowInstance);
         }
 
-        let promise: WorkflowReturnType = Worker.asyncLocalStorage.run<ReturnType<T>>(workflowContext, async () => {
+        let promise: WorkflowReturnType = Worker.asyncLocalStorage.run(workflowContext, async () => {
             let result: any;
             let error: any;
             let isError = false;
