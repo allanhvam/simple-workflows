@@ -4,7 +4,7 @@ import { proxyActivities } from "../../proxyActivities";
 const { sleep } = proxyActivities(activities, {});
 
 export async function concurrentWorkflow(): Promise<void> {
-    function shuffleArray(array) {
+    function shuffleArray(array: Array<string>) {
         for (let i = array.length - 1; i > 0; i--) {
             let j = Math.floor(Math.random() * (i + 1));
             let temp = array[i];

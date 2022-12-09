@@ -6,6 +6,7 @@ import { BaseWorkflowHandle, Workflow, WorkflowReturnType } from "./Workflow";
 import msPkg from "ms";
 import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
+import { sleep } from "./sleep";
 
 export interface IWorker {
     store: IWorkflowHistoryStore;
@@ -120,11 +121,47 @@ export class Worker implements IWorker {
             await store?.setInstance(workflowInstance);
         }
 
-        let promise: WorkflowReturnType = Worker.asyncLocalStorage.run<ReturnType<T>>(workflowContext, () => {
-            if (options?.args) {
-                return workflow(...options?.args);
+        let promise: WorkflowReturnType = Worker.asyncLocalStorage.run<ReturnType<T>>(workflowContext, async () => {
+            let result: any;
+            let error: any;
+            let isError = false;
+            try {
+                if (options?.args) {
+                    result = await workflow(...options?.args);
+                } else {
+                    result = await workflow();
+                }
+            } catch (e) {
+                error = e;
+                isError = true;
             }
-            return workflow();
+
+            await workflowContext.mutex.runExclusive(async () => {
+                if (store) {
+                    workflowInstance = await store.getInstance(workflowInstance.instanceId);
+                    if (workflowInstance.status === "timeout") {
+                        return Promise.reject(error);
+                    }
+                }
+
+                workflowInstance.end = new Date();
+                if (!isError) {
+                    workflowContext.log(() => `${workflowId}: end (${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms)`);
+                    workflowInstance.result = result;
+                } else {
+                    workflowContext.log(() => `${workflowId}: end (error, ${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms)`);
+                    workflowInstance.error = serializeError(error);
+                }
+
+                if (store) {
+                    await store.setInstance(workflowInstance);
+                }
+            });
+
+            if (isError) {
+                throw error;
+            }
+            return result;
         });
 
         if (options?.workflowExecutionTimeout) {
@@ -136,7 +173,6 @@ export class Worker implements IWorker {
             }
 
             let timeout = async () => {
-                let sleep = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); });
                 await sleep(ms);
 
                 if (store) {
@@ -167,44 +203,7 @@ export class Worker implements IWorker {
         return {
             workflowId,
             result: async () => {
-                let result: any;
-                let error: any;
-                let isError = false;
-                try {
-                    result = await promise;
-                } catch (e) {
-                    error = e;
-                    isError = true;
-                }
-
-                // TODO: this need to be bundled with promise above
-                await workflowContext.mutex.runExclusive(async () => {
-                    if (store) {
-                        workflowInstance = await store.getInstance(workflowInstance.instanceId);
-                        if (workflowInstance.status === "timeout") {
-                            return Promise.reject(error);
-                        }
-                    }
-
-                    workflowInstance.end = new Date();
-                    if (!isError) {
-                        workflowContext.log(() => `${workflowId}: end (${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms)`);
-                        workflowInstance.result = result;
-                    } else {
-                        workflowContext.log(() => `${workflowId}: end (error, ${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms)`);
-                        workflowInstance.error = serializeError(error);
-                    }
-
-                    if (store) {
-                        await store.setInstance(workflowInstance);
-                    }
-                });
-
-                if (!isError) {
-                    return result;
-                } else {
-                    return Promise.reject(error);
-                }
+                return await promise;
             },
         };
     }

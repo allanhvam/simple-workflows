@@ -18,6 +18,7 @@ import { largeWorkflow } from "./workflows/large-workflow";
 import { concurrentWorkflow } from "./workflows/concurrent-workflow";
 import { noTimeoutWorkflow } from "./workflows/no-timeout-workflow";
 import { FileSystemWorkflowHistoryStore, MemoryWorkflowHistoryStore, DurableFunctionsWorkflowHistoryStore } from "../stores";
+import { sleep } from "../sleep";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -146,7 +147,6 @@ test("void-workflow", async (t) => {
 
 test("timeout-workflow", async (t) => {
     // Arrange
-    let sleep = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); });
     const worker = Worker.getInstance();
 
     // Act
@@ -171,7 +171,6 @@ test("timeout-workflow", async (t) => {
 
 test("no-timeout-workflow", async (t) => {
     // Arrange
-    let sleep = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); });
     const worker = Worker.getInstance();
 
     // Act
@@ -366,4 +365,19 @@ test("concurrent-workflow", async (t) => {
     t.truthy(instance);
     t.truthy(instance.activities);
     t.is(instance.activities.length, 10);
+});
+
+test("greet-workflow-no-await-result", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    const handle = await worker.start(greetWorkflow, { args: ["test no await"] });
+    await sleep("5s");
+
+    let instance = await worker.store.getInstance(handle.workflowId);
+
+    // Assert
+    t.truthy(instance.end, "Expected the workflow to have ended")
+    t.is(instance.result, "Hello, test no await!");
 });

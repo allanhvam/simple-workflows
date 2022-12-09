@@ -28,7 +28,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                 let serializeArg = (arg: any): string => {
                     if (typeof arg === "number") {
                         return arg.toString();
-                    } else if (typeof arg === "string" && arg.length < 20) {
+                    } else if (typeof arg === "string" && arg.length < 36) {
                         return `"${arg}"`;
                     }
                     return undefined;
