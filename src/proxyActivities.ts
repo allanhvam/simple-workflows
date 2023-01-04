@@ -55,7 +55,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
 
                 log(() => `${logPrefix}: start`);
 
-                // Node.js v11 change to https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
+                // Node.js v17 change to structuredClone() https://twitter.com/simonplend/status/1483789097734918152
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
                 let originalArgs = JSON.stringify(args);
 
@@ -91,7 +91,8 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                     return activity.result;
                 } else if (activity && Object.prototype.hasOwnProperty.call(activity, "error")) {
                     log(() => `${logPrefix}: skip (error)`);
-                    return Promise.reject(deserializeError(activity.error));
+                    let reason = deserializeError(activity.error);
+                    return Promise.reject(reason);
                 }
 
                 let result: any;

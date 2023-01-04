@@ -9,7 +9,7 @@ import { Counters } from "./activities/Counters";
 import { timeoutWorkflow } from "./workflows/timeout-workflow";
 import { distanceWorkflow } from "./workflows/distance-workflow";
 import { moveWorkflow } from "./workflows/move-workflow";
-import { throwWorkflow } from "./workflows/throw-workflow";
+import { throwErrorWorkflow } from "./workflows/throw-error-workflow";
 import { callTwiceWorkflow } from "./workflows/call-twice-workflow";
 import { noStore } from "./workflows/no-store";
 import { nestedWorkflow } from "./workflows/nested-workflow";
@@ -19,6 +19,7 @@ import { concurrentWorkflow } from "./workflows/concurrent-workflow";
 import { noTimeoutWorkflow } from "./workflows/no-timeout-workflow";
 import { FileSystemWorkflowHistoryStore, MemoryWorkflowHistoryStore, DurableFunctionsWorkflowHistoryStore } from "../stores";
 import { sleep } from "../sleep";
+import { throwWorkflow } from "./workflows/throw-workflow";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -233,12 +234,12 @@ test("move-workflow", async (t) => {
     t.deepEqual(instance.activities[1].args[0], { x: 0, y: 1 });
 });
 
-test("throw-workflow", async (t) => {
+test("throw-error-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let handle = await worker.start(throwWorkflow, { workflowId: "throw" });
+    let handle = await worker.start(throwErrorWorkflow, { workflowId: "throw-error" });
 
     // Assert
     await t.throwsAsync(async () => {
@@ -262,6 +263,29 @@ test("throw-workflow", async (t) => {
 
     t.truthy(activity.start instanceof Date);
     t.truthy(activity.end instanceof Date);
+});
+
+test("throw-workflow", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    let handle = await worker.start(throwWorkflow, { workflowId: "throw" });
+
+    // Assert
+    try {
+        await handle.result();
+    } catch (e) {
+        t.is(typeof e, "string");
+    }
+
+    let instance = await worker.store.getInstance(handle.workflowId);
+    t.truthy(instance.end, "Expected instance end to be set.");
+    t.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
+    t.truthy(instance.error, "Expected error to be set");
+    console.dir(instance.error);
+    t.is(typeof instance.error, "string", "Expected error to be string");
+    t.is(instance.error, "Message 1");
 });
 
 test("call-twice-workflow", async (t) => {

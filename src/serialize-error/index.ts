@@ -165,7 +165,7 @@ export function serializeError<ErrorType>(value: ErrorType, options: IOptions = 
     return value as any;
 }
 
-export function deserializeError(value: ErrorObject | unknown, options: IOptions = {}): Error {
+export function deserializeError(value: ErrorObject | unknown, options: IOptions = {}): Error | unknown {
     const { maxDepth = Number.POSITIVE_INFINITY } = options;
 
     if (value instanceof Error) {
@@ -184,5 +184,5 @@ export function deserializeError(value: ErrorObject | unknown, options: IOptions
         return newError;
     }
 
-    return new NonError(value);
+    return value;
 }

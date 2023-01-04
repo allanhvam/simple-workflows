@@ -7,4 +7,5 @@ export * from "./greet";
 export * from "./increment-counter";
 export * from "./move";
 export * from "./sleep";
+export * from "./throw-error-message";
 export * from "./throw-message";
