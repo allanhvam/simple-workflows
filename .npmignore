@@ -2,6 +2,7 @@ src
 .vscode
 .github
 ava.config.js
+ava.config.mjs
 tsconfig.json
 lib/tests/*
 lib/debug.js
