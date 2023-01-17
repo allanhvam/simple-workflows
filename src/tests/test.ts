@@ -17,13 +17,15 @@ import { longWorkflow } from "./workflows/long-workflow";
 import { largeWorkflow } from "./workflows/large-workflow";
 import { concurrentWorkflow } from "./workflows/concurrent-workflow";
 import { noTimeoutWorkflow } from "./workflows/no-timeout-workflow";
+import { nowWorkflow } from "./workflows/now-workflow";
 import { FileSystemWorkflowHistoryStore, MemoryWorkflowHistoryStore, DurableFunctionsWorkflowHistoryStore } from "../stores";
 import { sleep } from "../sleep";
 import { throwWorkflow } from "./workflows/throw-workflow";
+import superjson from 'superjson';
 
 test.before(async () => {
     const worker = Worker.getInstance();
-    let store = new DurableFunctionsWorkflowHistoryStore("UseDevelopmentStorage=true");
+    let store = new DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true" });
     // let store = new FileSystemWorkflowHistoryStore();
     await store.clear();
     // let store = new MemoryWorkflowHistoryStore();
@@ -404,4 +406,26 @@ test("greet-workflow-no-await-result", async (t) => {
     // Assert
     t.truthy(instance.end, "Expected the workflow to have ended")
     t.is(instance.result, "Hello, test no await!");
+});
+
+
+test("now", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    const handle = await worker.start(nowWorkflow, {
+        store: new DurableFunctionsWorkflowHistoryStore({
+            connectionString: "UseDevelopmentStorage=true",
+            serializer: superjson
+        }),
+    });
+
+    let result = await handle.result();
+
+    let instance = await handle.store.getInstance(handle.workflowId);
+
+    // Assert
+    t.truthy(result instanceof Date, "Expected result to be Date")
+    t.truthy(instance.result instanceof Date, "Expected result to be Date");
 });

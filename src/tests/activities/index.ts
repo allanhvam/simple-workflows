@@ -6,6 +6,7 @@ export * from "./get-workflow-id";
 export * from "./greet";
 export * from "./increment-counter";
 export * from "./move";
+export * from "./now";
 export * from "./sleep";
 export * from "./throw-error-message";
 export * from "./throw-message";

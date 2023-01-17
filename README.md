@@ -58,6 +58,22 @@ console.log(`Started workflow ${handle.workflowId}`);
 let result = await handle.result();
 ```
 
+# Custom serialization
+
+By default standard JSON serialization is used, the serialization can be customized 
+by setting serializer on the store eg.:
+
+```ts
+import superjson from 'superjson';
+
+const worker = WorkflowWorker.getInstance();
+const store = new DurableFunctionsWorkflowHistoryStore({
+  connectionString: "UseDevelopmentStorage=true",
+  serializer: superjson,
+});
+worker.store = store;
+```
+
 # Limitations
 
 - Workflows & activities is executed in the current process

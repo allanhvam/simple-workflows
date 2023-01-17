@@ -8,12 +8,15 @@ import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
 import { sleep } from "./sleep";
 import { IWorker, WorkflowStartOptions } from "./IWorker";
+import { ISerializer } from "./ISerializer";
+import { DefaultSerializer } from "./DefaultSerializer";
 
 export class Worker implements IWorker {
     public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
     private static instance: IWorker;
 
     public store: IWorkflowHistoryStore = new MemoryWorkflowHistoryStore();
+    public serializer: ISerializer = new DefaultSerializer();
     public log: (s: string) => void = undefined;
 
     private constructor() {
@@ -34,7 +37,8 @@ export class Worker implements IWorker {
             workflowId = options.workflowId;
         }
 
-        let store = Worker.getInstance().store;
+        let worker = Worker.getInstance();
+        let store = worker.store;
         if (options && Object.prototype.hasOwnProperty.call(options, "store")) {
             store = options.store;
         }
@@ -43,7 +47,7 @@ export class Worker implements IWorker {
             workflowId,
             store,
             log: (f: () => string) => {
-                let log = Worker.getInstance().log;
+                let log = worker.log;
                 if (log) {
                     log(f());
                 }
@@ -63,6 +67,7 @@ export class Worker implements IWorker {
             workflowContext.log(() => `${workflowId}: skip (already executed)`);
             return {
                 workflowId,
+                store,
                 result: async () => {
                     return workflowInstance.result;
                 },
@@ -73,6 +78,7 @@ export class Worker implements IWorker {
             workflowContext.log(() => `${workflowId}: skip (error)`);
             return {
                 workflowId,
+                store,
                 result: async () => {
                     let reason = deserializeError(workflowInstance.error);
                     return Promise.reject(reason);
@@ -172,6 +178,7 @@ export class Worker implements IWorker {
 
         return {
             workflowId,
+            store,
             result: async () => {
                 return await promise;
             },

@@ -1,3 +1,4 @@
+import { ISerializer } from "./ISerializer";
 import { IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
 import { BaseWorkflowHandle, Workflow } from "./Workflow";
 
@@ -23,13 +24,18 @@ export declare type WorkflowOptions = {
      * Store for the workflow instance, overwrites the global instance (if set)
      */
     store?: IWorkflowHistoryStore;
+    /**
+     * Serializer for the workflow instance, overwrites the global instance (if set)
+     */
+    serializer?: ISerializer;
 }
 
 export declare type WorkflowStartOptions<T extends Workflow = Workflow> = WithWorkflowArgs<T, WorkflowOptions>;
 
 
 export interface IWorker {
-    store: IWorkflowHistoryStore;
-    log?: (s: string) => void;
     start<T extends Workflow>(workflow: T, options?: WorkflowStartOptions<T>): Promise<BaseWorkflowHandle<T>>;
+    store: IWorkflowHistoryStore;
+    serializer: ISerializer;
+    log?: (s: string) => void;
 }

@@ -1,4 +1,5 @@
 
+import { isDeepStrictEqual } from "util";
 import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
 import { deserializeError, serializeError } from "./serialize-error";
 import { IWorkflowActivityInstance, IWorkflowInstance } from "./stores/IWorkflowHistoryStore";
@@ -57,20 +58,26 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
 
                 // Node.js v17 change to structuredClone() https://twitter.com/simonplend/status/1483789097734918152
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
-                let originalArgs = JSON.stringify(args);
+                let originalArgs: any;
+                if (typeof structuredClone !== "undefined") {
+                    originalArgs = structuredClone(args);
+                } else {
+                    originalArgs = JSON.parse(JSON.stringify(args));
+                }
 
                 let startActivity = await mutex.runExclusive(async (): Promise<IWorkflowActivityInstance | "timeout"> => {
                     let instance = await store?.getInstance(workflowId);
                     if (instance?.status === "timeout") {
                         return instance?.status;
                     }
-                    let activity = instance?.activities.find(a => a.name === activityType && JSON.stringify(a.args) === originalArgs);
+
+                    let activity = instance?.activities.find(a => a.name === activityType && isDeepStrictEqual(a.args, originalArgs));
 
                     // If not executed yet
                     if (!activity) {
                         activity = {
                             name: activityType,
-                            args: JSON.parse(originalArgs),
+                            args: originalArgs,
                             start: new Date(),
                         };
                         instance?.activities.push(activity);
@@ -119,7 +126,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                     let instance: IWorkflowInstance = undefined;
                     if (store) {
                         instance = await store?.getInstance(workflowId);
-                        activity = instance?.activities.find(a => a.name === activityType && JSON.stringify(a.args) === originalArgs);
+                        activity = instance?.activities.find(a => a.name === activityType && isDeepStrictEqual(a.args, originalArgs));
                     }
 
                     activity.end = new Date();

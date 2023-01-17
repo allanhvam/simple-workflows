@@ -3,16 +3,21 @@ import { resolve } from "path";
 import { cwd } from "process";
 import * as fs from "fs";
 import { deserializeError, serializeError } from "../serialize-error";
+import { ISerializer } from "../ISerializer";
+import { DefaultSerializer } from "../DefaultSerializer";
 
 export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<IWorkflowInstance> = [];
 
-    public constructor(private options?: { path?: string }) {
+    public constructor(private options?: { path?: string, serializer?: ISerializer }) {
         if (!this.options) {
             this.options = {};
         }
         if (!this.options.path) {
             this.options.path = resolve(cwd(), "./workflow-history/");
+        }
+        if (!this.options.serializer) {
+            this.options.serializer = new DefaultSerializer();
         }
         if (!fs.existsSync(this.options.path)) {
             throw new Error(`simple-workflows: FileSystemWorkflowHistoryStore path ${this.options.path} does not exist.`);
@@ -26,7 +31,7 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         }
 
         let contents = fs.readFileSync(filePath, { encoding: "utf-8" });
-        let instance: IWorkflowInstance = JSON.parse(contents);
+        let instance: IWorkflowInstance = this.options.serializer.parse(contents);
         // Deserialize dates and errors
         if (instance.start) {
             instance.start = new Date(instance.start);
@@ -71,10 +76,10 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         }
 
         if (!current) {
-            fs.writeFileSync(filePath, JSON.stringify(instance, (k, v) => v === undefined ? null : v), { encoding: "utf-8" });
+            fs.writeFileSync(filePath, this.options.serializer.stringify(instance), { encoding: "utf-8" });
         } else {
             Object.assign(current, instance);
-            fs.writeFileSync(filePath, JSON.stringify(current, (k, v) => v === undefined ? null : v), { encoding: "utf-8" });
+            fs.writeFileSync(filePath, this.options.serializer.stringify(current), { encoding: "utf-8" });
         }
         return Promise.resolve();
     }

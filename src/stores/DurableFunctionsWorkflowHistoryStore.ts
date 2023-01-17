@@ -4,6 +4,8 @@ import { deserializeError, serializeError } from "../serialize-error";
 import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
 import zlib from "zlib";
 import { Mutex } from "async-mutex";
+import { DefaultSerializer } from "../DefaultSerializer";
+import { ISerializer } from "../ISerializer";
 
 interface IDurableFunctionsWorkflowHistory {
     Name: string,
@@ -40,7 +42,13 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
     private largeMessages: ContainerClient;
     private mutex = new Mutex();
 
-    constructor(private connectionString: string, private taskHubName = "Workflow") {
+    constructor(private options: { connectionString: string, taskHubName?: string, serializer?: ISerializer }) {
+        if (!this.options.taskHubName) {
+            this.options.taskHubName = "Workflow";
+        }
+        if (!this.options.serializer) {
+            this.options.serializer = new DefaultSerializer();
+        }
     }
 
     private async init(): Promise<void> {
@@ -48,16 +56,18 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             return;
         }
 
-        let tableServiceClient = TableServiceClient.fromConnectionString(this.connectionString);
-        await tableServiceClient.createTable(`${this.taskHubName}History`);
-        await tableServiceClient.createTable(`${this.taskHubName}Instances`);
+        let { connectionString, taskHubName } = this.options;
 
-        this.history = TableClient.fromConnectionString(this.connectionString, `${this.taskHubName}History`);
-        this.instances = TableClient.fromConnectionString(this.connectionString, `${this.taskHubName}Instances`);
+        let tableServiceClient = TableServiceClient.fromConnectionString(connectionString);
+        await tableServiceClient.createTable(`${taskHubName}History`);
+        await tableServiceClient.createTable(`${taskHubName}Instances`);
 
-        let blobServicesClient = BlobServiceClient.fromConnectionString(this.connectionString);
+        this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`);
+        this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`);
 
-        this.largeMessages = blobServicesClient.getContainerClient(`${this.taskHubName}-largemessages`.toLowerCase());
+        let blobServicesClient = BlobServiceClient.fromConnectionString(connectionString);
+
+        this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
         await this.largeMessages.createIfNotExists();
 
         this.initialized = true;
@@ -91,12 +101,12 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
     }
 
     public async clear(): Promise<void> {
-        let tableServiceClient = TableServiceClient.fromConnectionString(this.connectionString);
-        await tableServiceClient.deleteTable(`${this.taskHubName}History`);
-        await tableServiceClient.deleteTable(`${this.taskHubName}Instances`);
+        let tableServiceClient = TableServiceClient.fromConnectionString(this.options.connectionString);
+        await tableServiceClient.deleteTable(`${this.options.taskHubName}History`);
+        await tableServiceClient.deleteTable(`${this.options.taskHubName}Instances`);
 
-        let blobServicesClient = BlobServiceClient.fromConnectionString(this.connectionString);
-        let largeMessages = blobServicesClient.getContainerClient(`${this.taskHubName}-largemessages`.toLowerCase());
+        let blobServicesClient = BlobServiceClient.fromConnectionString(this.options.connectionString);
+        let largeMessages = blobServicesClient.getContainerClient(`${this.options.taskHubName}-largemessages`.toLowerCase());
         await largeMessages.deleteIfExists();
 
         this.initialized = false;
@@ -127,7 +137,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                 let buffer = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
 
                 let unzipped = zlib.unzipSync(buffer).toString();
-                return JSON.parse(unzipped);
+                return this.options.serializer.parse(unzipped);
             };
 
             let entity: GetTableEntityResponse<TableEntityResult<IDurableFunctionsWorkflowInstance>> = undefined;
@@ -153,7 +163,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                 if (entity.Input.indexOf("http://") === 0) {
                     instance.args = await getBlob(`${id}/Input.json.gz`);
                 } else {
-                    instance.args = JSON.parse(entity.Input);
+                    instance.args = this.options.serializer.parse(entity.Input);
                 }
             }
 
@@ -166,7 +176,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                         if (entity.InputBlobName) {
                             args = await getBlob(entity.InputBlobName);
                         } else {
-                            args = JSON.parse(entity.Input);
+                            args = this.options.serializer.parse(entity.Input);
                         }
 
                         instance.activities.push(
@@ -182,7 +192,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     if (entity.ResultBlobName) {
                         result = await getBlob(entity.ResultBlobName);
                     } else if (entity.Result) {
-                        result = JSON.parse(entity.Result);
+                        result = this.options.serializer.parse(entity.Result);
                     }
 
                     if (entity.EventType === "TaskCompleted") {
@@ -203,7 +213,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     if (entity.Output.indexOf("http://") === 0) {
                         output = await getBlob(`${id}/Output.json.gz`);
                     } else {
-                        output = JSON.parse(entity.Output);
+                        output = this.options.serializer.parse(entity.Output);
                     }
 
                     if (entity.RuntimeStatus === "Failed") {
@@ -244,16 +254,16 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             const task: TableEntity<IDurableFunctionsWorkflowInstance> = {
                 partitionKey: instance.instanceId,
                 rowKey: "",
-                Input: JSON.stringify(instance.args),
+                Input: this.options.serializer.stringify(instance.args),
                 CreatedTime: this.getDate(instance.start),
                 Name: instance.instanceId,
                 Version: "",
                 RuntimeStatus: instance.end ? (error ? "Failed" : "Completed") : "Running",
                 LastUpdatedTime: this.getDate(new Date()),
-                TaskHubName: this.taskHubName,
+                TaskHubName: this.options.taskHubName,
                 CustomStatus: instance.status,
                 ExecutionId: instance.instanceId,
-                Output: error ? JSON.stringify(serializeError(instance.error)) : JSON.stringify(instance.result),
+                Output: error ? this.options.serializer.stringify(serializeError(instance.error)) : this.options.serializer.stringify(instance.result),
                 CompletedTime: this.getDate(instance.end),
             };
 
@@ -304,7 +314,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     _Timestamp: this.getDate(activity.start),
                     EventType: "TaskScheduled",
                     ExecutionId: instance.instanceId,
-                    Input: JSON.stringify(activity.args),
+                    Input: this.options.serializer.stringify(activity.args),
                 };
                 if (isLargeHistory(row)) {
                     row.InputBlobName = `${row.partitionKey}/history-${row.rowKey}-${row.EventType}-Input.json.gz`;
@@ -330,7 +340,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                         EventType: error ? "TaskFailed" : "TaskCompleted",
                         TaskScheduledId: eventId - 1,
                         ExecutionId: instance.instanceId,
-                        Result: error ? JSON.stringify(serializeError(activity.error)) : JSON.stringify(activity.result),
+                        Result: error ? this.options.serializer.stringify(serializeError(activity.error)) : this.options.serializer.stringify(activity.result),
                     };
                     if (isLargeHistory(row)) {
                         row.ResultBlobName = `${row.partitionKey}/history-${row.rowKey}-${row.EventType}-Result.json.gz`;
@@ -355,7 +365,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     _Timestamp: this.getDate(instance.end),
                     EventType: "ExecutionCompleted",
                     ExecutionId: instance.instanceId,
-                    Result: JSON.stringify(instance.result),
+                    Result: this.options.serializer.stringify(instance.result),
                 };
 
                 if (isLargeHistory(row)) {

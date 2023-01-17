@@ -1,3 +1,5 @@
+import { IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
+
 export declare type WorkflowReturnType = Promise<any>;
 
 export declare type Workflow = (...args: any[]) => WorkflowReturnType;
@@ -6,6 +8,6 @@ export declare type WorkflowResultType<W extends Workflow> = ReturnType<W> exten
 
 export interface BaseWorkflowHandle<T extends Workflow> {
     result(): Promise<WorkflowResultType<T>>;
-
+    store: IWorkflowHistoryStore;
     readonly workflowId: string;
 }
