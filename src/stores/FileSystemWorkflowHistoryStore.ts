@@ -5,6 +5,7 @@ import * as fs from "fs";
 import { deserializeError, serializeError } from "../serialize-error";
 import { ISerializer } from "../ISerializer";
 import { DefaultSerializer } from "../DefaultSerializer";
+import { parse as pathParse } from "path";
 
 export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<IWorkflowInstance> = [];
@@ -92,5 +93,28 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
             let filePath = resolve(this.options.path, file);
             fs.unlinkSync(filePath);
         });
+    }
+
+    public async getInstances(): Promise<Array<IWorkflowInstance>> {
+        let files = fs.readdirSync(this.options.path);
+        files = files.filter(file => fs.lstatSync(file).isFile());
+
+        const instanceIds = files.map(file => pathParse(file).name);
+
+        const instances = new Array<IWorkflowInstance>();
+        for (let i = 0; i !== instanceIds.length; i++) {
+            const id = instanceIds[i];
+            const instance = await this.getInstance(id);
+            instances.push(instance);
+        }
+        return instances;
+    }
+
+    public async removeInstance(id: string): Promise<void> {
+        let filePath = resolve(this.options.path, `${id}.json`);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
     }
 }

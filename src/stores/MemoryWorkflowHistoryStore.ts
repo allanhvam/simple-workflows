@@ -18,4 +18,15 @@ export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
         }
         return Promise.resolve();
     }
+
+    public async getInstances(): Promise<IWorkflowInstance[]> {
+        return Promise.resolve(this.workflowHistory);
+    }
+
+    public async removeInstance(id: string): Promise<void> {
+        const index = this.workflowHistory.findIndex(i => i.instanceId === id);
+        if (index > -1) {
+            this.workflowHistory.splice(index, 1);
+        }
+    }
 }

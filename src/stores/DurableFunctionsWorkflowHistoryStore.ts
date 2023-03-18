@@ -421,4 +421,12 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             }
         });
     }
+
+    public async getInstances(): Promise<IWorkflowInstance[]> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async removeInstance(id: string): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
 }

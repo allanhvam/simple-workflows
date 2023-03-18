@@ -22,4 +22,6 @@ export interface IWorkflowActivityInstance {
 export interface IWorkflowHistoryStore {
     getInstance: (id: string) => Promise<IWorkflowInstance>;
     setInstance: (instance: IWorkflowInstance) => Promise<void>;
+    getInstances: () => Promise<Array<IWorkflowInstance>>;
+    removeInstance: (id: string) => Promise<void>;
 }
