@@ -423,10 +423,46 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
     }
 
     public async getInstances(): Promise<IWorkflowInstance[]> {
-        throw new Error("Method not implemented.");
+        let instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowHistory>().byPage({ maxPageSize: 50 });
+
+        const workflows = new Array<IWorkflowInstance>();
+        for await (const page of instancesIterator) {
+            for await (const entity of page) {
+                workflows.push(await this.getInstance(entity.Name));
+            }
+        }
+
+        return workflows;
     }
 
     public async removeInstance(id: string): Promise<void> {
-        throw new Error("Method not implemented.");
+        let entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "");
+
+        let historyIterator = this.history.listEntities<IDurableFunctionsWorkflowHistory>({ queryOptions: { filter: `PartitionKey eq '${id}'` } }).byPage({ maxPageSize: 50 });
+        for await (const page of historyIterator) {
+            for await (const entity of page) {
+                if (entity.InputBlobName) {
+                    let input = this.largeMessages.getBlockBlobClient(entity.InputBlobName);
+                    await input.deleteIfExists();
+                }
+                if (entity.ResultBlobName) {
+                    let result = this.largeMessages.getBlockBlobClient(entity.ResultBlobName);
+                    await result.deleteIfExists();
+                }
+                await this.history.deleteEntity(id, entity.rowKey);
+            }
+        }
+
+        if (entity.Input && entity.Input.indexOf("http://") === 0) {
+            let input = this.largeMessages.getBlockBlobClient(`${id}/Input.json.gz`);
+            await input.deleteIfExists();
+        }
+
+        if (entity.Output && entity.Output.indexOf("http://") === 0) {
+            let output = this.largeMessages.getBlockBlobClient(`${id}/Output.json.gz`);
+            await output.deleteIfExists();
+        }
+
+        await this.instances.deleteEntity(id, "");
     }
 }
