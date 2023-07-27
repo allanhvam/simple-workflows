@@ -1,15 +1,15 @@
-import { IWorkflowHistoryStore, IWorkflowInstance } from "./IWorkflowHistoryStore";
+import { IWorkflowHistoryStore, WorkflowInstance } from "./IWorkflowHistoryStore";
 
 export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
-    public workflowHistory: Array<IWorkflowInstance> = [];
+    public workflowHistory: Array<WorkflowInstance> = [];
 
-    public async getInstance(id: string): Promise<IWorkflowInstance> {
+    public async getInstance(id: string): Promise<WorkflowInstance> {
         let workflowInstance = this.workflowHistory.find(w => w.instanceId === id);
 
         return Promise.resolve(workflowInstance);
     }
 
-    public async setInstance(instance: IWorkflowInstance): Promise<void> {
+    public async setInstance(instance: WorkflowInstance): Promise<void> {
         let current = await this.getInstance(instance.instanceId);
         if (!current) {
             this.workflowHistory.push(instance);
@@ -19,7 +19,7 @@ export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
         return Promise.resolve();
     }
 
-    public async getInstances(): Promise<IWorkflowInstance[]> {
+    public async getInstances(): Promise<WorkflowInstance[]> {
         return Promise.resolve(this.workflowHistory);
     }
 

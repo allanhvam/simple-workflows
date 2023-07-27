@@ -1,27 +1,27 @@
-export interface IWorkflowInstance {
+export type WorkflowInstance = {
     instanceId: string;
     status?: "timeout";
-    args: Array<any>;
+    args: Array<unknown>;
     start: Date;
     end?: Date;
-    result?: any;
-    error?: any;
+    result?: unknown;
+    error?: unknown;
 
-    activities: Array<IWorkflowActivityInstance>;
+    activities: Array<WorkflowActivityInstance>;
 }
 
-export interface IWorkflowActivityInstance {
+export type WorkflowActivityInstance = {
     name: string;
-    args: Array<any>;
+    args: Array<unknown>;
     start: Date;
     end?: Date;
-    result?: any;
-    error?: any;
+    result?: unknown;
+    error?: unknown;
 }
 
 export interface IWorkflowHistoryStore {
-    getInstance: (id: string) => Promise<IWorkflowInstance>;
-    setInstance: (instance: IWorkflowInstance) => Promise<void>;
-    getInstances: () => Promise<Array<IWorkflowInstance>>;
+    getInstance: (id: string) => Promise<WorkflowInstance>;
+    setInstance: (instance: WorkflowInstance) => Promise<void>;
+    getInstances: () => Promise<Array<WorkflowInstance>>;
     removeInstance: (id: string) => Promise<void>;
 }

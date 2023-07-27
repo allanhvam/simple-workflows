@@ -1,4 +1,4 @@
-import { IWorkflowActivityInstance, IWorkflowHistoryStore, IWorkflowInstance } from "./IWorkflowHistoryStore";
+import { WorkflowActivityInstance, IWorkflowHistoryStore, WorkflowInstance } from "./IWorkflowHistoryStore";
 import { GetTableEntityResponse, TableClient, TableEntity, TableEntityResult, TableServiceClient, TableTransaction } from "@azure/data-tables";
 import { deserializeError, serializeError } from "../serialize-error";
 import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
@@ -113,7 +113,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         await this.init();
     }
 
-    public async getInstance(id: string): Promise<IWorkflowInstance> {
+    public async getInstance(id: string): Promise<WorkflowInstance> {
         return await this.mutex.runExclusive(async () => {
             await this.init();
 
@@ -150,13 +150,13 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                 throw e;
             }
 
-            let instance: IWorkflowInstance = {
+            let instance: WorkflowInstance = {
                 instanceId: id,
                 status: entity.CustomStatus as any,
                 args: undefined,
                 start: entity.CreatedTime,
                 end: entity.CompletedTime,
-                activities: new Array<IWorkflowActivityInstance>(),
+                activities: new Array<WorkflowActivityInstance>(),
             };
 
             if (entity.Input) {
@@ -228,7 +228,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         });
     }
 
-    public async setInstance(instance: IWorkflowInstance): Promise<void> {
+    public async setInstance(instance: WorkflowInstance): Promise<void> {
         await this.mutex.runExclusive(async () => {
             let isLarge = (data: string): boolean => {
                 let sixtyKb = 60 * 128;
@@ -422,10 +422,10 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         });
     }
 
-    public async getInstances(): Promise<IWorkflowInstance[]> {
+    public async getInstances(): Promise<WorkflowInstance[]> {
         let instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowHistory>().byPage({ maxPageSize: 50 });
 
-        const workflows = new Array<IWorkflowInstance>();
+        const workflows = new Array<WorkflowInstance>();
         for await (const page of instancesIterator) {
             for await (const entity of page) {
                 workflows.push(await this.getInstance(entity.Name));

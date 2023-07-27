@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "async_hooks";
 import { IWorkflowContext } from "./IWorkflowContext";
 import { IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
 import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore";
-import { BaseWorkflowHandle, Workflow, WorkflowReturnType } from "./Workflow";
+import { BaseWorkflowHandle, Workflow, WorkflowResultType, WorkflowReturnType } from "./Workflow";
 import msPkg from "ms";
 import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
@@ -69,7 +69,7 @@ export class Worker implements IWorker {
                 workflowId,
                 store,
                 result: async () => {
-                    return workflowInstance.result;
+                    return workflowInstance.result as Promise<WorkflowResultType<T>>;
                 },
             };
         }
