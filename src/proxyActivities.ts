@@ -2,7 +2,7 @@
 import { isDeepStrictEqual } from "util";
 import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
 import { deserializeError, serializeError } from "./serialize-error";
-import { IWorkflowActivityInstance, IWorkflowInstance } from "./stores/IWorkflowHistoryStore";
+import { WorkflowActivityInstance, WorkflowInstance } from "./stores/IWorkflowHistoryStore";
 import { Worker } from "./Worker";
 
 interface ActivityFunction<P extends any[], R> {
@@ -65,7 +65,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                     originalArgs = JSON.parse(JSON.stringify(args));
                 }
 
-                let startActivity = await mutex.runExclusive(async (): Promise<IWorkflowActivityInstance | "timeout"> => {
+                let startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout"> => {
                     let instance = await store?.getInstance(workflowId);
                     if (instance?.status === "timeout") {
                         return instance?.status;
@@ -123,7 +123,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                 }
 
                 await mutex.runExclusive(async () => {
-                    let instance: IWorkflowInstance = undefined;
+                    let instance: WorkflowInstance = undefined;
                     if (store) {
                         instance = await store?.getInstance(workflowId);
                         activity = instance?.activities.find(a => a.name === activityType && isDeepStrictEqual(a.args, originalArgs));

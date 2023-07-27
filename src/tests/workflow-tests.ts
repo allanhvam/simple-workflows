@@ -373,7 +373,8 @@ test("large-workflow", async (t) => {
     t.true(large !== undefined);
     t.is(large.activities.length, 1);
     let activity = large.activities[0];
-    t.true(activity.result.length >= 10000);
+    const result = activity.result as Array<any>;
+    t.true(result.length >= 10000);
 });
 
 test("concurrent-workflow", async (t) => {

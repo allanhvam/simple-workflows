@@ -1,4 +1,4 @@
-import { IWorkflowHistoryStore, IWorkflowInstance } from "./IWorkflowHistoryStore";
+import { IWorkflowHistoryStore, WorkflowInstance } from "./IWorkflowHistoryStore";
 import { resolve } from "path";
 import { cwd } from "process";
 import * as fs from "fs";
@@ -8,7 +8,7 @@ import { DefaultSerializer } from "../DefaultSerializer";
 import { parse as pathParse } from "path";
 
 export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
-    public workflowHistory: Array<IWorkflowInstance> = [];
+    public workflowHistory: Array<WorkflowInstance> = [];
 
     public constructor(private options?: { path?: string, serializer?: ISerializer }) {
         if (!this.options) {
@@ -25,14 +25,14 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         }
     }
 
-    public async getInstance(id: string): Promise<IWorkflowInstance> {
+    public async getInstance(id: string): Promise<WorkflowInstance> {
         let filePath = resolve(this.options.path, `${id}.json`);
         if (!fs.existsSync(filePath)) {
             return Promise.resolve(undefined);
         }
 
         let contents = fs.readFileSync(filePath, { encoding: "utf-8" });
-        let instance: IWorkflowInstance = this.options.serializer.parse(contents);
+        let instance: WorkflowInstance = this.options.serializer.parse(contents);
         // Deserialize dates and errors
         if (instance.start) {
             instance.start = new Date(instance.start);
@@ -60,7 +60,7 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         return instance;
     }
 
-    public async setInstance(instance: IWorkflowInstance): Promise<void> {
+    public async setInstance(instance: WorkflowInstance): Promise<void> {
         let current = await this.getInstance(instance.instanceId);
         let filePath = resolve(this.options.path, `${instance.instanceId}.json`);
 
@@ -95,13 +95,13 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         });
     }
 
-    public async getInstances(): Promise<Array<IWorkflowInstance>> {
+    public async getInstances(): Promise<Array<WorkflowInstance>> {
         let files = fs.readdirSync(this.options.path);
         files = files.filter(file => fs.lstatSync(file).isFile());
 
         const instanceIds = files.map(file => pathParse(file).name);
 
-        const instances = new Array<IWorkflowInstance>();
+        const instances = new Array<WorkflowInstance>();
         for (let i = 0; i !== instanceIds.length; i++) {
             const id = instanceIds[i];
             const instance = await this.getInstance(id);
