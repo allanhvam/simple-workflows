@@ -5,15 +5,15 @@ import { deserializeError, serializeError } from "./serialize-error";
 import { WorkflowActivityInstance, WorkflowInstance } from "./stores/IWorkflowHistoryStore";
 import { Worker } from "./Worker";
 
-interface ActivityFunction<P extends any[], R> {
-    (...args: P): Promise<R>;
-}
+type PromiseFuncKeys<T> = {
+    [K in keyof T]: T[K] extends ((...args: any[]) => Promise<any>) ? K : never;
+}[keyof T]
 
-declare type ActivityInterface = Record<string, ActivityFunction<any[], any>>;
+type OnlyAsync<T> = Pick<T, PromiseFuncKeys<T>>;
 
-export function proxyActivities<A extends ActivityInterface>(activities: A, options?: { retry?: number }): A {
-    return new Proxy({}, {
-        get(_, activityType) {
+export function proxyActivities<A extends object>(activities: A, options?: { retry?: number }): OnlyAsync<A> {
+    return new Proxy(activities, {
+        get(obj, activityType) {
             if (typeof activityType !== "string") {
                 throw new TypeError(`Only strings are supported for Activity types, got: ${String(activityType)}`);
             }
@@ -52,7 +52,12 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                         logArgs = "(...)";
                     }
                 }
-                let logPrefix = `${workflowId}/${activityType}${logArgs}`;
+
+                let activityName = String(activityType);
+                if (obj.constructor.name && obj.constructor.name !== "Object") {
+                    activityName = `${obj.constructor.name}.${activityType}`;
+                }
+                let logPrefix = `${workflowId}/${activityName}${logArgs}`;
 
                 log(() => `${logPrefix}: start`);
 
@@ -71,12 +76,12 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                         return instance?.status;
                     }
 
-                    let activity = instance?.activities.find(a => a.name === activityType && isDeepStrictEqual(a.args, originalArgs));
+                    let activity = instance?.activities.find(a => a.name === activityName && isDeepStrictEqual(a.args, originalArgs));
 
                     // If not executed yet
                     if (!activity) {
                         activity = {
-                            name: activityType,
+                            name: activityName,
                             args: originalArgs,
                             start: new Date(),
                         };
@@ -111,8 +116,18 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                         result = await retryPolicy.retry(() => {
                             executions++;
                             return f(...args);
-                        }, () => {
-                            log(() => `${logPrefix}: retry`);
+                        }, (e) => {
+                            let message = `retry, execution #${executions} failed`;
+                            if (e && !e.stack && "toString" in e) {
+                                message = `${message} (${e.toString()})`;
+                            }
+                            log(() => `${logPrefix}: ${message}`);
+                            if (e?.stack && typeof e.stack === "string") {
+                                const stack = e.stack.split("\n");
+                                stack.forEach(element => {
+                                    log(() => `${logPrefix}: ${element}`);
+                                });
+                            }
                         });
                     } else {
                         result = await f(...args);
@@ -126,7 +141,7 @@ export function proxyActivities<A extends ActivityInterface>(activities: A, opti
                     let instance: WorkflowInstance = undefined;
                     if (store) {
                         instance = await store?.getInstance(workflowId);
-                        activity = instance?.activities.find(a => a.name === activityType && isDeepStrictEqual(a.args, originalArgs));
+                        activity = instance?.activities.find(a => a.name === activityName && isDeepStrictEqual(a.args, originalArgs));
                     }
 
                     activity.end = new Date();

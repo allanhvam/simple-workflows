@@ -22,6 +22,7 @@ import { FileSystemWorkflowHistoryStore, MemoryWorkflowHistoryStore, DurableFunc
 import { sleep } from "../sleep";
 import { throwWorkflow } from "./workflows/throw-workflow";
 import superjson from 'superjson';
+import { greetServiceWorkflow } from "./workflows/greet-service-workflow";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -48,6 +49,28 @@ test("greet-workflow", async (t) => {
 
     t.truthy(instance);
     t.is(instance.activities.length, 1);
+    t.is(instance.activities[0].name, "greet");
+    t.is(instance.activities[0].args.length, 1);
+    t.deepEqual(instance.activities[0].args[0], "test");
+    t.is(instance.activities[0].result, "Hello, test!");
+});
+
+test("greet-service-workflow", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    const handle = await worker.start(greetServiceWorkflow, { args: ["test"] });
+    let result = await handle.result();
+
+    let instance = await worker.store.getInstance(handle.workflowId);
+
+    // Assert
+    t.is(result, "Hello, test!");
+
+    t.truthy(instance);
+    t.is(instance.activities.length, 1);
+    t.is(instance.activities[0].name, "GreetService.greet");
     t.is(instance.activities[0].args.length, 1);
     t.deepEqual(instance.activities[0].args[0], "test");
     t.is(instance.activities[0].result, "Hello, test!");
@@ -285,7 +308,6 @@ test("throw-workflow", async (t) => {
     t.truthy(instance.end, "Expected instance end to be set.");
     t.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
     t.truthy(instance.error, "Expected error to be set");
-    console.dir(instance.error);
     t.is(typeof instance.error, "string", "Expected error to be string");
     t.is(instance.error, "Message 1");
 });

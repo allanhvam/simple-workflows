@@ -52,7 +52,7 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
                     activity.end = new Date(activity.end);
                 }
                 if (activity.error) {
-                    activity.error = deserializeError(instance.error);
+                    activity.error = deserializeError(activity.error);
                 }
             });
         }
