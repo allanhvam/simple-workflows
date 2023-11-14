@@ -10,4 +10,7 @@ export class DefaultSerializer implements ISerializer {
     parse<T>(s: string): T {
         return JSON.parse(s);
     }
+    equal = (a: any, b: any): boolean => {
+        return this.stringify(a) === this.stringify(b);
+    }
 }

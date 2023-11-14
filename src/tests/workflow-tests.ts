@@ -34,7 +34,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-test("greet-workflow", async (t) => {
+test("greet-workflow, test", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -53,6 +53,26 @@ test("greet-workflow", async (t) => {
     t.is(instance.activities[0].args.length, 1);
     t.deepEqual(instance.activities[0].args[0], "test");
     t.is(instance.activities[0].result, "Hello, test!");
+});
+
+test("greet-workflow, undefined", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    const handle = await worker.start(greetWorkflow, { args: [undefined] });
+    let result = await handle.result();
+
+    let instance = await worker.store.getInstance(handle.workflowId);
+
+    // Assert
+    t.is(result, "Hello, undefined!");
+
+    t.truthy(instance);
+    t.is(instance.activities.length, 1);
+    t.is(instance.activities[0].name, "greet");
+    t.is(instance.activities[0].args.length, 1);
+    t.deepEqual(instance.activities[0].args[0], null);
 });
 
 test("greet-service-workflow", async (t) => {

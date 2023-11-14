@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "util";
 import { IWorkflowHistoryStore, WorkflowInstance } from "./IWorkflowHistoryStore";
 
 export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
@@ -29,4 +30,6 @@ export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
             this.workflowHistory.splice(index, 1);
         }
     }
+
+    public equal = isDeepStrictEqual;
 }

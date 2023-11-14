@@ -24,4 +24,5 @@ export interface IWorkflowHistoryStore {
     setInstance: (instance: WorkflowInstance) => Promise<void>;
     getInstances: () => Promise<Array<WorkflowInstance>>;
     removeInstance: (id: string) => Promise<void>;
+    equal(val1: any, val2: any): boolean;
 }
