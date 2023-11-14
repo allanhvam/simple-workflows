@@ -24,10 +24,6 @@ export declare type WorkflowOptions = {
      * Store for the workflow instance, overwrites the global instance (if set)
      */
     store?: IWorkflowHistoryStore;
-    /**
-     * Serializer for the workflow instance, overwrites the global instance (if set)
-     */
-    serializer?: ISerializer;
 }
 
 export declare type WorkflowStartOptions<T extends Workflow = Workflow> = WithWorkflowArgs<T, WorkflowOptions>;
@@ -36,6 +32,5 @@ export declare type WorkflowStartOptions<T extends Workflow = Workflow> = WithWo
 export interface IWorker {
     start<T extends Workflow>(workflow: T, options?: WorkflowStartOptions<T>): Promise<BaseWorkflowHandle<T>>;
     store: IWorkflowHistoryStore;
-    serializer: ISerializer;
     log?: (s: string) => void;
 }

@@ -8,15 +8,12 @@ import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
 import { sleep } from "./sleep";
 import { IWorker, WorkflowStartOptions } from "./IWorker";
-import { ISerializer } from "./ISerializer";
-import { DefaultSerializer } from "./DefaultSerializer";
 
 export class Worker implements IWorker {
     public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
     private static instance: IWorker;
 
     public store: IWorkflowHistoryStore = new MemoryWorkflowHistoryStore();
-    public serializer: ISerializer = new DefaultSerializer();
     public log: (s: string) => void = undefined;
 
     private constructor() {

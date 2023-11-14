@@ -27,7 +27,11 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 let { workflowId, store, log, mutex } = context;
 
                 let serializeArg = (arg: any): string => {
-                    if (typeof arg === "number") {
+                    if (arg === undefined) {
+                        return "undefined";
+                    } else if (arg === null) {
+                        return "null";
+                    } else if (typeof arg === "number") {
                         return arg.toString();
                     } else if (typeof arg === "string" && arg.length < 36) {
                         return `"${arg}"`;
@@ -61,14 +65,8 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
 
                 log(() => `${logPrefix}: start`);
 
-                // Node.js v17 change to structuredClone() https://twitter.com/simonplend/status/1483789097734918152
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
-                let originalArgs: any;
-                if (typeof structuredClone !== "undefined") {
-                    originalArgs = structuredClone(args);
-                } else {
-                    originalArgs = JSON.parse(JSON.stringify(args));
-                }
+                let originalArgs = structuredClone(args);
 
                 let startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout"> => {
                     let instance = await store?.getInstance(workflowId);
@@ -76,7 +74,8 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                         return instance?.status;
                     }
 
-                    let activity = instance?.activities.find(a => a.name === activityName && isDeepStrictEqual(a.args, originalArgs));
+                    const equal = store?.equal || isDeepStrictEqual;
+                    let activity = instance?.activities.find(a => a.name === activityName && equal(a.args, originalArgs));
 
                     // If not executed yet
                     if (!activity) {
@@ -140,10 +139,13 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 await mutex.runExclusive(async () => {
                     let instance: WorkflowInstance = undefined;
                     if (store) {
-                        instance = await store?.getInstance(workflowId);
-                        activity = instance?.activities.find(a => a.name === activityName && isDeepStrictEqual(a.args, originalArgs));
+                        instance = await store.getInstance(workflowId);
+                        const equal = store?.equal || isDeepStrictEqual;
+                        activity = instance?.activities.find(a => a.name === activityName && equal(a.args, originalArgs));
                     }
-
+                    if (!activity) {
+                        throw new Error(`simple-workflows: Failed to find activity '${activityName}' on workflow '${workflowId}', could be a error in the store or serialization.`);
+                    }
                     activity.end = new Date();
                     if (error) {
                         activity.error = serializeError(error);

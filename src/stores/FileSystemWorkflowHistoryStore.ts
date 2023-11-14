@@ -6,6 +6,7 @@ import { deserializeError, serializeError } from "../serialize-error";
 import { ISerializer } from "../ISerializer";
 import { DefaultSerializer } from "../DefaultSerializer";
 import { parse as pathParse } from "path";
+import { isDeepStrictEqual } from "util";
 
 export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];
@@ -23,6 +24,10 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         if (!fs.existsSync(this.options.path)) {
             throw new Error(`simple-workflows: FileSystemWorkflowHistoryStore path ${this.options.path} does not exist.`);
         }
+    }
+
+    public equal = (val1: any, val2: any): boolean => {
+        return (this.options.serializer.equal || isDeepStrictEqual)(val1, val2);
     }
 
     public async getInstance(id: string): Promise<WorkflowInstance> {

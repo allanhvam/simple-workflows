@@ -6,6 +6,7 @@ import zlib from "zlib";
 import { Mutex } from "async-mutex";
 import { DefaultSerializer } from "../DefaultSerializer";
 import { ISerializer } from "../ISerializer";
+import { isDeepStrictEqual } from "util";
 
 interface IDurableFunctionsWorkflowHistory {
     Name: string,
@@ -49,6 +50,10 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         if (!this.options.serializer) {
             this.options.serializer = new DefaultSerializer();
         }
+    }
+
+    public equal = (val1: any, val2: any): boolean => {
+        return (this.options.serializer.equal || isDeepStrictEqual)(val1, val2);
     }
 
     private async init(): Promise<void> {
