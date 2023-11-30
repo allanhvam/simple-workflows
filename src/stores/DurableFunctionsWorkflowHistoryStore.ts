@@ -1,4 +1,4 @@
-import { WorkflowActivityInstance, IWorkflowHistoryStore, WorkflowInstance } from "./IWorkflowHistoryStore";
+import { WorkflowActivityInstance, IWorkflowHistoryStore, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
 import { GetTableEntityResponse, TableClient, TableEntity, TableEntityResult, TableServiceClient, TableTransaction } from "@azure/data-tables";
 import { deserializeError, serializeError } from "../serialize-error";
 import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
@@ -430,7 +430,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
     public async getInstances(): Promise<WorkflowInstance[]> {
         return await this.mutex.runExclusive(async () => {
             await this.init();
-            
+
             let instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowHistory>().byPage({ maxPageSize: 50 });
 
             const workflows = new Array<WorkflowInstance>();
@@ -443,6 +443,45 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             return workflows;
         });
     }
+
+    public async getInstanceHeaders(): Promise<Array<WorkflowInstanceHeader>> {
+        return await this.mutex.runExclusive(async () => {
+            await this.init();
+
+            let instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowHistory>().byPage({ maxPageSize: 50 });
+
+            const headers = new Array<WorkflowInstanceHeader>();
+            for await (const page of instancesIterator) {
+                for await (const entity of page) {
+                    const id = entity.Name;
+                    try {
+                        const entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "");
+
+                        let header: WorkflowInstanceHeader = {
+                            instanceId: id,
+                            status: entity.CustomStatus as any,
+                            start: entity.CreatedTime,
+                            end: entity.CompletedTime,
+                        };
+
+                        if (header.end && entity.Output && entity.RuntimeStatus === "Failed") {
+                            header.error = true;
+                        }
+
+                        headers.push(header);
+                    } catch (e) {
+                        if (e.statusCode === 404) {
+                            continue;
+                        }
+                        throw e;
+                    }
+                }
+            }
+
+            return headers;
+        });
+    }
+
 
     public async removeInstance(id: string): Promise<void> {
         return await this.mutex.runExclusive(async () => {

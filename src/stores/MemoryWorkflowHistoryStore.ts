@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from "util";
-import { IWorkflowHistoryStore, WorkflowInstance } from "./IWorkflowHistoryStore";
+import { IWorkflowHistoryStore, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
 
 export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];
@@ -22,6 +22,18 @@ export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
 
     public async getInstances(): Promise<WorkflowInstance[]> {
         return Promise.resolve(this.workflowHistory);
+    }
+
+    public async getInstanceHeaders(): Promise<Array<WorkflowInstanceHeader>> {
+        return Promise.resolve(this.workflowHistory.map(instance => {
+            return {
+                instanceId: instance.instanceId,
+                status: instance.status,
+                start: instance.start,
+                end: instance.end,
+                error: instance.error ? true : false,
+            };
+        }));
     }
 
     public async removeInstance(id: string): Promise<void> {
