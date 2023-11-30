@@ -23,14 +23,14 @@ test("Workflow store, removeInstance", async (t) => {
     await handle.result();
 
     // Act
-    let workflowInstances = await store.getInstances();
+    let workflowInstances = await store.getInstanceHeaders();
 
     // Assert
     let workflow = workflowInstances.find(wi => wi.instanceId === workflowId);
     t.truthy(workflow);
     await store.removeInstance(workflow.instanceId);
 
-    workflowInstances = await store.getInstances();
+    workflowInstances = await store.getInstanceHeaders();
     workflow = workflowInstances.find(wi => wi.instanceId === workflowId);
     t.falsy(workflow);
 });
