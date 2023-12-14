@@ -122,115 +122,119 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         return await this.mutex.runExclusive(async () => {
             await this.init();
 
-            async function streamToBuffer(readableStream: NodeJS.ReadableStream): Promise<Buffer> {
-                return new Promise((resolve, reject) => {
-                    const chunks = [];
-                    readableStream.on("data", (data) => {
-                        chunks.push(data instanceof Buffer ? data : Buffer.from(data));
-                    });
-                    readableStream.on("end", () => {
-                        resolve(Buffer.concat(chunks));
-                    });
-                    readableStream.on("error", reject);
-                });
-            }
-
-            let getBlob = async (blobName: string): Promise<any> => {
-                let blockBlobClient = this.largeMessages.getBlockBlobClient(blobName);
-
-                const downloadBlockBlobResponse = await blockBlobClient.download();
-                let buffer = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
-
-                let unzipped = zlib.unzipSync(buffer).toString();
-                return this.options.serializer.parse(unzipped);
-            };
-
-            let entity: GetTableEntityResponse<TableEntityResult<IDurableFunctionsWorkflowInstance>> = undefined;
-            try {
-                entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "");
-            } catch (e) {
-                if (e.statusCode === 404) {
-                    return undefined;
-                }
-                throw e;
-            }
-
-            let instance: WorkflowInstance = {
-                instanceId: id,
-                status: entity.CustomStatus as any,
-                args: undefined,
-                start: entity.CreatedTime,
-                end: entity.CompletedTime,
-                activities: new Array<WorkflowActivityInstance>(),
-            };
-
-            if (entity.Input) {
-                if (entity.Input.indexOf("http://") === 0) {
-                    instance.args = await getBlob(`${id}/Input.json.gz`);
-                } else {
-                    instance.args = this.options.serializer.parse(entity.Input);
-                }
-            }
-
-            let historyIterator = this.history.listEntities<IDurableFunctionsWorkflowHistory>({ queryOptions: { filter: `PartitionKey eq '${id}'` } }).byPage({ maxPageSize: 50 });
-
-            for await (const page of historyIterator) {
-                for await (const entity of page) {
-                    if (entity.EventId > -1 && entity.EventType === "TaskScheduled") {
-                        let args: Array<any>;
-                        if (entity.InputBlobName) {
-                            args = await getBlob(entity.InputBlobName);
-                        } else {
-                            args = this.options.serializer.parse(entity.Input);
-                        }
-
-                        instance.activities.push(
-                            {
-                                args,
-                                name: entity.Name,
-                                start: entity["_Timestamp"],
-                            },
-                        );
-                    }
-
-                    let result: any = undefined;
-                    if (entity.ResultBlobName) {
-                        result = await getBlob(entity.ResultBlobName);
-                    } else if (entity.Result) {
-                        result = this.options.serializer.parse(entity.Result);
-                    }
-
-                    if (entity.EventType === "TaskCompleted") {
-                        let activity = instance.activities[entity.TaskScheduledId];
-                        activity.end = entity["_Timestamp"];
-                        activity.result = result;
-                    } else if (entity.EventType === "TaskFailed") {
-                        let activity = instance.activities[entity.TaskScheduledId];
-                        activity.end = entity["_Timestamp"];
-                        activity.error = result && deserializeError(result);
-                    }
-                }
-            }
-
-            if (instance.end) {
-                let output: any = undefined;
-                if (entity.Output) {
-                    if (entity.Output.indexOf("http://") === 0) {
-                        output = await getBlob(`${id}/Output.json.gz`);
-                    } else {
-                        output = this.options.serializer.parse(entity.Output);
-                    }
-
-                    if (entity.RuntimeStatus === "Failed") {
-                        instance.error = deserializeError(output);
-                    } else {
-                        instance.result = output;
-                    }
-                }
-            }
-
-            return instance;
+            return this.getInstanceInternal(id);
         });
+    }
+
+    private async getInstanceInternal(id: string): Promise<WorkflowInstance> {
+        async function streamToBuffer(readableStream: NodeJS.ReadableStream): Promise<Buffer> {
+            return new Promise((resolve, reject) => {
+                const chunks = [];
+                readableStream.on("data", (data) => {
+                    chunks.push(data instanceof Buffer ? data : Buffer.from(data));
+                });
+                readableStream.on("end", () => {
+                    resolve(Buffer.concat(chunks));
+                });
+                readableStream.on("error", reject);
+            });
+        }
+
+        let getBlob = async (blobName: string): Promise<any> => {
+            let blockBlobClient = this.largeMessages.getBlockBlobClient(blobName);
+
+            const downloadBlockBlobResponse = await blockBlobClient.download();
+            let buffer = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
+
+            let unzipped = zlib.unzipSync(buffer).toString();
+            return this.options.serializer.parse(unzipped);
+        };
+
+        let entity: GetTableEntityResponse<TableEntityResult<IDurableFunctionsWorkflowInstance>> = undefined;
+        try {
+            entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "");
+        } catch (e) {
+            if (e.statusCode === 404) {
+                return undefined;
+            }
+            throw e;
+        }
+
+        let instance: WorkflowInstance = {
+            instanceId: id,
+            status: entity.CustomStatus as any,
+            args: undefined,
+            start: entity.CreatedTime,
+            end: entity.CompletedTime,
+            activities: new Array<WorkflowActivityInstance>(),
+        };
+
+        if (entity.Input) {
+            if (entity.Input.indexOf("http://") === 0) {
+                instance.args = await getBlob(`${id}/Input.json.gz`);
+            } else {
+                instance.args = this.options.serializer.parse(entity.Input);
+            }
+        }
+
+        let historyIterator = this.history.listEntities<IDurableFunctionsWorkflowHistory>({ queryOptions: { filter: `PartitionKey eq '${id}'` } }).byPage({ maxPageSize: 50 });
+
+        for await (const page of historyIterator) {
+            for await (const entity of page) {
+                if (entity.EventId > -1 && entity.EventType === "TaskScheduled") {
+                    let args: Array<any>;
+                    if (entity.InputBlobName) {
+                        args = await getBlob(entity.InputBlobName);
+                    } else {
+                        args = this.options.serializer.parse(entity.Input);
+                    }
+
+                    instance.activities.push(
+                        {
+                            args,
+                            name: entity.Name,
+                            start: entity["_Timestamp"],
+                        },
+                    );
+                }
+
+                let result: any = undefined;
+                if (entity.ResultBlobName) {
+                    result = await getBlob(entity.ResultBlobName);
+                } else if (entity.Result) {
+                    result = this.options.serializer.parse(entity.Result);
+                }
+
+                if (entity.EventType === "TaskCompleted") {
+                    let activity = instance.activities[entity.TaskScheduledId];
+                    activity.end = entity["_Timestamp"];
+                    activity.result = result;
+                } else if (entity.EventType === "TaskFailed") {
+                    let activity = instance.activities[entity.TaskScheduledId];
+                    activity.end = entity["_Timestamp"];
+                    activity.error = result && deserializeError(result);
+                }
+            }
+        }
+
+        if (instance.end) {
+            let output: any = undefined;
+            if (entity.Output) {
+                if (entity.Output.indexOf("http://") === 0) {
+                    output = await getBlob(`${id}/Output.json.gz`);
+                } else {
+                    output = this.options.serializer.parse(entity.Output);
+                }
+
+                if (entity.RuntimeStatus === "Failed") {
+                    instance.error = deserializeError(output);
+                } else {
+                    instance.result = output;
+                }
+            }
+        }
+
+        return instance;
     }
 
     public async setInstance(instance: WorkflowInstance): Promise<void> {
@@ -436,7 +440,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             const workflows = new Array<WorkflowInstance>();
             for await (const page of instancesIterator) {
                 for await (const entity of page) {
-                    workflows.push(await this.getInstance(entity.Name));
+                    workflows.push(await this.getInstanceInternal(entity.Name));
                 }
             }
 
