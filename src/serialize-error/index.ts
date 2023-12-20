@@ -16,14 +16,14 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 export type JsonObject = { [Key in string]?: JsonValue };
 
 export type ErrorObject = {
-    name?: string;
-    stack?: string;
-    message?: string;
-    code?: string;
+    name?: string
+    stack?: string
+    message?: string
+    code?: string
 } & JsonObject;
 
 export interface IOptions {
-    readonly maxDepth?: number;
+    readonly maxDepth?: number
 }
 
 export class NonError extends Error {
@@ -33,7 +33,7 @@ export class NonError extends Error {
         super(NonError.prepareSuperMessage(message));
     }
 
-    private static prepareSuperMessage(message) {
+    private static prepareSuperMessage(message): string {
         try {
             return JSON.stringify(message);
         } catch {
@@ -63,20 +63,22 @@ const commonProperties = [
 
 const toJsonWasCalled = Symbol(".toJSON was called");
 
-const toJSON = from => {
+const toJSON = (from): any => {
     from[toJsonWasCalled] = true;
     const json = from.toJSON();
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete from[toJsonWasCalled];
     return json;
 };
 
-const destroyCircular = <ErrorType>({
+const destroyCircular = <ErrorType extends object>({
     from,
     seen,
     to_,
     forceEnumerable,
     maxDepth,
     depth,
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 }: { from: ErrorType, seen: Array<any>, to_?: any, forceEnumerable?: boolean, maxDepth: number, depth: number }) => {
     const to = to_ || (Array.isArray(from) ? [] : {});
 
@@ -86,6 +88,7 @@ const destroyCircular = <ErrorType>({
         return to;
     }
 
+    // eslint-disable-next-line @typescript-eslint/dot-notation
     if (typeof from["toJSON"] === "function" && from[toJsonWasCalled] !== true) {
         return toJSON(from);
     }
@@ -97,7 +100,7 @@ const destroyCircular = <ErrorType>({
         }
 
         // TODO: Use `stream.isReadable()` when targeting Node.js 18.
-        if (value !== null && typeof value === "object" && typeof value.pipe === "function") {
+        if (value !== null && typeof value === "object" && "pipe" in value && typeof value.pipe === "function") {
             to[key] = "[object Stream]";
             continue;
         }
@@ -153,8 +156,6 @@ export function serializeError<ErrorType>(value: ErrorType, options: IOptions = 
             depth: 0,
         });
     }
-
-    let a = value;
 
     // People sometimes throw things besides Error objects…
     if (typeof value === "function") {

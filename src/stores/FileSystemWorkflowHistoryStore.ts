@@ -1,43 +1,39 @@
-import { IWorkflowHistoryStore, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
-import { resolve } from "path";
+import { type IWorkflowHistoryStore, type WorkflowInstance, type WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
+import { resolve, parse as pathParse } from "path";
 import { cwd } from "process";
 import * as fs from "fs";
 import { deserializeError, serializeError } from "../serialize-error";
-import { ISerializer } from "../ISerializer";
+import { type ISerializer } from "../ISerializer";
 import { DefaultSerializer } from "../DefaultSerializer";
-import { parse as pathParse } from "path";
 import { isDeepStrictEqual } from "util";
 
 export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];
+    private readonly options: { path: string, serializer: ISerializer };
 
-    public constructor(private options?: { path?: string, serializer?: ISerializer }) {
-        if (!this.options) {
-            this.options = {};
-        }
-        if (!this.options.path) {
-            this.options.path = resolve(cwd(), "./workflow-history/");
-        }
-        if (!this.options.serializer) {
-            this.options.serializer = new DefaultSerializer();
-        }
+    public constructor(options?: { path?: string, serializer?: ISerializer }) {
+        this.options = {
+            path: options?.path ?? resolve(cwd(), "./workflow-history/"),
+            serializer: options?.serializer ?? new DefaultSerializer(),
+        };
+
         if (!fs.existsSync(this.options.path)) {
             throw new Error(`simple-workflows: FileSystemWorkflowHistoryStore path ${this.options.path} does not exist.`);
         }
     }
 
     public equal = (val1: any, val2: any): boolean => {
-        return (this.options.serializer.equal || isDeepStrictEqual)(val1, val2);
-    }
+        return (this.options.serializer.equal ?? isDeepStrictEqual)(val1, val2);
+    };
 
-    public async getInstance(id: string): Promise<WorkflowInstance> {
-        let filePath = resolve(this.options.path, `${id}.json`);
+    public async getInstance(id: string): Promise<WorkflowInstance | undefined> {
+        const filePath = resolve(this.options.path, `${id}.json`);
         if (!fs.existsSync(filePath)) {
-            return Promise.resolve(undefined);
+            return await Promise.resolve(undefined);
         }
 
-        let contents = fs.readFileSync(filePath, { encoding: "utf-8" });
-        let instance: WorkflowInstance = this.options.serializer.parse(contents);
+        const contents = fs.readFileSync(filePath, { encoding: "utf-8" });
+        const instance: WorkflowInstance = this.options.serializer.parse(contents);
         // Deserialize dates and errors
         if (instance.start) {
             instance.start = new Date(instance.start);
@@ -66,8 +62,8 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
     }
 
     public async setInstance(instance: WorkflowInstance): Promise<void> {
-        let current = await this.getInstance(instance.instanceId);
-        let filePath = resolve(this.options.path, `${instance.instanceId}.json`);
+        const current = await this.getInstance(instance.instanceId);
+        const filePath = resolve(this.options.path, `${instance.instanceId}.json`);
 
         // Serialize errors
         if (instance.error) {
@@ -87,15 +83,15 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
             Object.assign(current, instance);
             fs.writeFileSync(filePath, this.options.serializer.stringify(current), { encoding: "utf-8" });
         }
-        return Promise.resolve();
+        return await Promise.resolve();
     }
 
     public async clear(): Promise<void> {
-        let path = this.options.path;
+        const path = this.options.path;
         let files = fs.readdirSync(path);
         files = files.filter(file => file.indexOf(".json") > 0);
         files.forEach(file => {
-            let filePath = resolve(this.options.path, file);
+            const filePath = resolve(this.options.path, file);
             fs.unlinkSync(filePath);
         });
     }
@@ -110,26 +106,28 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         for (let i = 0; i !== instanceIds.length; i++) {
             const id = instanceIds[i];
             const instance = await this.getInstance(id);
-            instances.push(instance);
+            if (instance) {
+                instances.push(instance);
+            }
         }
         return instances;
     }
 
     public async getInstanceHeaders(): Promise<Array<WorkflowInstanceHeader>> {
         const instances = await this.getInstances();
-        return Promise.resolve(instances.map(instance => {
+        return await Promise.resolve(instances.map(instance => {
             return {
                 instanceId: instance.instanceId,
                 status: instance.status,
                 start: instance.start,
                 end: instance.end,
-                error: instance.error ? true : false,
+                error: !!instance.error,
             };
         }));
     }
 
     public async removeInstance(id: string): Promise<void> {
-        let filePath = resolve(this.options.path, `${id}.json`);
+        const filePath = resolve(this.options.path, `${id}.json`);
 
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);

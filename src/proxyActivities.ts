@@ -1,13 +1,12 @@
-
 import { isDeepStrictEqual } from "util";
 import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
 import { deserializeError, serializeError } from "./serialize-error";
-import { WorkflowActivityInstance, WorkflowInstance } from "./stores/IWorkflowHistoryStore";
+import { type WorkflowActivityInstance, type WorkflowInstance } from "./stores/IWorkflowHistoryStore";
 import { Worker } from "./Worker";
 
 type PromiseFuncKeys<T> = {
     [K in keyof T]: T[K] extends ((...args: any[]) => Promise<any>) ? K : never;
-}[keyof T]
+}[keyof T];
 
 type OnlyAsync<T> = Pick<T, PromiseFuncKeys<T>>;
 
@@ -18,15 +17,15 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 throw new TypeError(`Only strings are supported for Activity types, got: ${String(activityType)}`);
             }
             return async (...args: any[]) => {
-                let f = activities[activityType];
+                const f = activities[activityType];
 
-                let context = Worker.asyncLocalStorage.getStore();
+                const context = Worker.asyncLocalStorage.getStore();
                 if (!context) {
-                    throw new Error(`Workflow executed outside workflow context.`);
+                    throw new Error("Workflow executed outside workflow context.");
                 }
-                let { workflowId, store, log, mutex } = context;
+                const { workflowId, store, log, mutex } = context;
 
-                let serializeArg = (arg: any): string => {
+                const serializeArg = (arg: any): string | undefined => {
                     if (arg === undefined) {
                         return "undefined";
                     } else if (arg === null) {
@@ -41,15 +40,15 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
 
                 let logArgs = "()";
                 if (args?.length === 1) {
-                    let [arg] = args;
-                    let serializedArg = serializeArg(arg);
+                    const [arg] = args;
+                    const serializedArg = serializeArg(arg);
                     if (serializedArg) {
                         logArgs = `(${serializedArg})`;
                     } else {
                         logArgs = "(...)";
                     }
                 } else if (args?.length > 1) {
-                    let serializedArg = serializeArg(args[0]);
+                    const serializedArg = serializeArg(args[0]);
                     if (serializedArg) {
                         logArgs = `(${serializedArg}, ...)`;
                     } else {
@@ -61,20 +60,20 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 if (obj.constructor.name && obj.constructor.name !== "Object") {
                     activityName = `${obj.constructor.name}.${activityType}`;
                 }
-                let logPrefix = `${workflowId}/${activityName}${logArgs}`;
+                const logPrefix = `${workflowId}/${activityName}${logArgs}`;
 
                 log(() => `${logPrefix}: start`);
 
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
-                let originalArgs = structuredClone(args);
+                const originalArgs = structuredClone(args);
 
-                let startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout"> => {
-                    let instance = await store?.getInstance(workflowId);
+                const startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout" | undefined> => {
+                    const instance = await store?.getInstance(workflowId);
                     if (instance?.status === "timeout") {
                         return instance?.status;
                     }
 
-                    const equal = store?.equal || isDeepStrictEqual;
+                    const equal = store?.equal ?? isDeepStrictEqual;
                     let activity = instance?.activities.find(a => a.name === activityName && equal(a.args, originalArgs));
 
                     // If not executed yet
@@ -85,7 +84,9 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                             start: new Date(),
                         };
                         instance?.activities.push(activity);
-                        await store?.setInstance(instance);
+                        if (instance) {
+                            await store?.setInstance(instance);
+                        }
                     }
 
                     return activity;
@@ -102,42 +103,46 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                     return activity.result;
                 } else if (activity && Object.prototype.hasOwnProperty.call(activity, "error")) {
                     log(() => `${logPrefix}: skip (error)`);
-                    let reason = deserializeError(activity.error);
-                    return Promise.reject(reason);
+                    const reason = deserializeError(activity.error);
+                    return await Promise.reject(reason);
                 }
 
                 let result: any;
                 let error: any;
                 let executions = 0;
                 try {
-                    if (options?.retry > 0) {
-                        let retryPolicy = new DefaultRetryPolicy(options.retry);
+                    if (options?.retry !== undefined && options?.retry > 0) {
+                        const retryPolicy = new DefaultRetryPolicy(options.retry);
                         result = await retryPolicy.retry(() => {
                             executions++;
                             return f(...args);
                         }, (e) => {
                             let message = `retry, execution #${executions} failed`;
-                            if (e && !e.stack && "toString" in e) {
+                            if (e && typeof e === "object" && !e.stack && "toString" in e) {
                                 message = `${message} (${e.toString()})`;
+                            }
+                            if (e && (typeof e === "string" || typeof e === "number")) {
+                                message = `${message} (${String(e)})`;
                             }
                             log(() => `${logPrefix}: ${message}`);
                             if (e?.stack && typeof e.stack === "string") {
                                 const stack = e.stack.split("\n");
-                                stack.forEach(element => {
+                                stack.forEach((element: any) => {
                                     log(() => `${logPrefix}: ${element}`);
                                 });
                             }
                         });
                     } else {
-                        result = await f(...args);
+                        result = await f(...args).catch((ex) => {
+                            throw ex;
+                        });
                     }
                 } catch (e) {
-                    result = Promise.reject(e);
                     error = e;
                 }
 
                 await mutex.runExclusive(async () => {
-                    let instance: WorkflowInstance = undefined;
+                    let instance: WorkflowInstance | undefined;
                     if (store) {
                         instance = await store.getInstance(workflowId);
                         const equal = store?.equal || isDeepStrictEqual;
@@ -147,19 +152,23 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                         throw new Error(`simple-workflows: Failed to find activity '${activityName}' on workflow '${workflowId}', could be a error in the store or serialization.`);
                     }
                     activity.end = new Date();
+                    const duration = `${activity.end.getTime() - activity.start.getTime()} ms`;
                     if (error) {
                         activity.error = serializeError(error);
-                        log(() => `${logPrefix}: end (error, ${executions > 1 ? `${executions} executions, ` : ""}${activity.end.getTime() - activity.start.getTime()} ms)`);
+                        log(() => `${logPrefix}: end (error, ${executions > 1 ? `${executions} executions, ` : ""}${duration})`);
                     } else {
                         activity.result = result;
-                        log(() => `${logPrefix}: end (${executions > 1 ? `${executions} executions, ` : ""}${activity.end.getTime() - activity.start.getTime()} ms)`);
+                        log(() => `${logPrefix}: end (${executions > 1 ? `${executions} executions, ` : ""}${duration})`);
                     }
 
-                    if (store) {
+                    if (store && instance) {
                         await store?.setInstance(instance);
                     }
                 });
 
+                if (error) {
+                    return await Promise.reject(error);
+                }
                 return result;
             };
         },

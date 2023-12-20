@@ -1,37 +1,37 @@
 import { isDeepStrictEqual } from "util";
-import { IWorkflowHistoryStore, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
+import { type IWorkflowHistoryStore, type WorkflowInstance, type WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
 
 export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];
 
-    public async getInstance(id: string): Promise<WorkflowInstance> {
-        let workflowInstance = this.workflowHistory.find(w => w.instanceId === id);
+    public async getInstance(id: string): Promise<WorkflowInstance | undefined> {
+        const workflowInstance = this.workflowHistory.find(w => w.instanceId === id);
 
-        return Promise.resolve(workflowInstance);
+        return await Promise.resolve(workflowInstance);
     }
 
     public async setInstance(instance: WorkflowInstance): Promise<void> {
-        let current = await this.getInstance(instance.instanceId);
+        const current = await this.getInstance(instance.instanceId);
         if (!current) {
             this.workflowHistory.push(instance);
         } else {
             Object.assign(current, instance);
         }
-        return Promise.resolve();
+        return await Promise.resolve();
     }
 
     public async getInstances(): Promise<WorkflowInstance[]> {
-        return Promise.resolve(this.workflowHistory);
+        return await Promise.resolve(this.workflowHistory);
     }
 
     public async getInstanceHeaders(): Promise<Array<WorkflowInstanceHeader>> {
-        return Promise.resolve(this.workflowHistory.map(instance => {
+        return await Promise.resolve(this.workflowHistory.map(instance => {
             return {
                 instanceId: instance.instanceId,
                 status: instance.status,
                 start: instance.start,
                 end: instance.end,
-                error: instance.error ? true : false,
+                error: !!instance.error,
             };
         }));
     }
