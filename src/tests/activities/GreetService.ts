@@ -4,11 +4,11 @@ export class GreetService {
     public prop = "prop";
     public greet = greet;
 
-    public promise = async () => {
-        return Promise.resolve("");
-    }
+    public promise = async (): Promise<string> => {
+        return await Promise.resolve("");
+    };
 
-    public standard = () => {
+    public standard = (): string => {
         return "";
-    }
+    };
 }

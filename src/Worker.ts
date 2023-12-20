@@ -1,13 +1,13 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { IWorkflowContext } from "./IWorkflowContext";
-import { IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
+import { type IWorkflowContext } from "./IWorkflowContext";
+import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
 import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore";
-import { BaseWorkflowHandle, Workflow, WorkflowResultType, WorkflowReturnType } from "./Workflow";
+import { type BaseWorkflowHandle, type Workflow, type WorkflowResultType, type WorkflowReturnType } from "./Workflow";
 import msPkg from "ms";
 import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
 import { sleep } from "./sleep";
-import { IWorker, WorkflowStartOptions } from "./IWorker";
+import { type IWorker, type WorkflowStartOptions } from "./IWorker";
 
 export class Worker implements IWorker {
     public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
@@ -34,17 +34,17 @@ export class Worker implements IWorker {
             workflowId = options.workflowId;
         }
 
-        let worker = Worker.getInstance();
+        const worker = Worker.getInstance();
         let store: IWorkflowHistoryStore | undefined = worker.store;
         if (options && Object.prototype.hasOwnProperty.call(options, "store")) {
             store = options.store;
         }
 
-        let workflowContext: IWorkflowContext = {
+        const workflowContext: IWorkflowContext = {
             workflowId,
             store,
             log: (f: () => string) => {
-                let log = worker.log;
+                const log = worker.log;
                 if (log) {
                     log(f());
                 }
@@ -57,7 +57,7 @@ export class Worker implements IWorker {
         let workflowInstance = await store?.getInstance(workflowId);
         if (workflowInstance?.status === "timeout") {
             workflowContext.log(() => `${workflowId}: skip (timeout)`);
-            return Promise.reject(new Error(`Workflow ${workflowInstance.instanceId} timeout.`));
+            return await Promise.reject(new Error(`Workflow ${workflowInstance.instanceId} timeout.`));
         }
 
         if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "result")) {
@@ -67,7 +67,7 @@ export class Worker implements IWorker {
                 workflowId,
                 store,
                 result: async () => {
-                    return result as Promise<WorkflowResultType<T>>;
+                    return await (result as Promise<WorkflowResultType<T>>);
                 },
             };
         }
@@ -79,8 +79,8 @@ export class Worker implements IWorker {
                 workflowId,
                 store,
                 result: async () => {
-                    let reason = deserializeError(error);
-                    return Promise.reject(reason);
+                    const reason = deserializeError(error);
+                    return await Promise.reject(reason);
                 },
             };
         }
@@ -88,7 +88,7 @@ export class Worker implements IWorker {
         if (!workflowInstance) {
             workflowInstance = {
                 instanceId: workflowId,
-                args: options?.args || [],
+                args: options?.args ?? [],
                 start: new Date(),
                 activities: [],
             };
@@ -113,7 +113,7 @@ export class Worker implements IWorker {
 
             await workflowContext.mutex.runExclusive(async () => {
                 if (!workflowInstance) {
-                    throw new Error(`Expected workflow instance to be set.`);
+                    throw new Error("Expected workflow instance to be set.");
                 }
                 if (store) {
                     const id = workflowInstance.instanceId;
@@ -122,7 +122,7 @@ export class Worker implements IWorker {
                         throw new Error(`Workflow '${id}' not found in store.`);
                     }
                     if (workflowInstance?.status === "timeout") {
-                        return Promise.reject(error);
+                        return await Promise.reject(error);
                     }
                 }
 
@@ -155,7 +155,7 @@ export class Worker implements IWorker {
                 ms = options.workflowExecutionTimeout;
             }
 
-            let timeout = async () => {
+            const timeout = async (): Promise<undefined> => {
                 await sleep(ms);
 
                 if (store && workflowInstance) {
@@ -179,7 +179,7 @@ export class Worker implements IWorker {
                 });
 
                 workflowContext.log(() => `${workflowId}: end (timeout)`);
-                return Promise.reject(new Error(`Workflow ${workflowInstance?.instanceId} timeout.`));
+                return await Promise.reject(new Error(`Workflow ${workflowInstance?.instanceId} timeout.`));
             };
 
             promise = Promise.race([promise, timeout()]);

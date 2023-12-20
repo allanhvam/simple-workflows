@@ -22,12 +22,12 @@ import { nowWorkflow } from "./workflows/now-workflow";
 import { FileSystemWorkflowHistoryStore, MemoryWorkflowHistoryStore, DurableFunctionsWorkflowHistoryStore } from "../stores";
 import { sleep } from "../sleep";
 import { throwWorkflow } from "./workflows/throw-workflow";
-import superjson from 'superjson';
+import superjson from "superjson";
 import { greetServiceWorkflow } from "./workflows/greet-service-workflow";
 
 test.before(async () => {
     const worker = Worker.getInstance();
-    let store = new DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true" });
+    const store = new DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true" });
     // let store = new FileSystemWorkflowHistoryStore();
     await store.clear();
     // let store = new MemoryWorkflowHistoryStore();
@@ -35,15 +35,15 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-test("greet-workflow, test", async (t) => {
+void test("greet-workflow, test", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(greetWorkflow, { args: ["test"] });
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, "Hello, test!");
@@ -56,15 +56,15 @@ test("greet-workflow, test", async (t) => {
     assert.equal(instance.activities[0].result, "Hello, test!");
 });
 
-test("greet-workflow, undefined", async (t) => {
+void test("greet-workflow, undefined", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(greetWorkflow, { args: [undefined] });
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, "Hello, undefined!");
@@ -76,15 +76,15 @@ test("greet-workflow, undefined", async (t) => {
     assert.deepEqual(instance.activities[0].args[0], null);
 });
 
-test("greet-service-workflow", async (t) => {
+void test("greet-service-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(greetServiceWorkflow, { args: ["test"] });
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, "Hello, test!");
@@ -97,15 +97,15 @@ test("greet-service-workflow", async (t) => {
     assert.equal(instance.activities[0].result, "Hello, test!");
 });
 
-test("test-workflow", async (t) => {
+void test("test-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(testWorkflow, { workflowId: "test-42" });
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, "test-42");
@@ -117,27 +117,27 @@ test("test-workflow", async (t) => {
     assert.equal(instance.activities[0].result, "test-42");
 });
 
-test("increment-counter-workflow", async (t) => {
+void test("increment-counter-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(incrementCounterWorkflow);
-    let result = await handle.result();
+    const result = await handle.result();
 
     // Assert
     assert.equal(result, 1);
 });
 
-test("add-workflow", async (t) => {
+void test("add-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(addWorkflow);
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, 3);
@@ -150,15 +150,15 @@ test("add-workflow", async (t) => {
     assert.equal(instance.activities[0].result, 3);
 });
 
-test("add-workflow args", async (t) => {
+void test("add-workflow args", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(addWorkflow, { args: [3, 4] });
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, 7);
@@ -175,13 +175,13 @@ test("add-workflow args", async (t) => {
     assert.equal(instance.activities[0].result, 7);
 });
 
-test("void-workflow", async (t) => {
+void test("void-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     let handle = await worker.start(voidWorkflow, { workflowId: "void" });
-    let result = await handle.result();
+    await handle.result();
 
     handle = await worker.start(voidWorkflow, { workflowId: "void" });
     await handle.result();
@@ -190,12 +190,12 @@ test("void-workflow", async (t) => {
     assert.equal(Counters.get("void"), 1);
 });
 
-test("timeout-workflow", async (t) => {
+void test("timeout-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let handle = await worker.start(timeoutWorkflow, {
+    const handle = await worker.start(timeoutWorkflow, {
         workflowId: "timeout",
         workflowExecutionTimeout: "1s",
     });
@@ -210,17 +210,17 @@ test("timeout-workflow", async (t) => {
     // Note: tests that activity execution is stopped
     assert.equal(Counters.get("timeout-end"), 0);
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
     assert.ok(instance);
     assert.equal(instance.status, "timeout");
 });
 
-test("no-timeout-workflow", async (t) => {
+void test("no-timeout-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let handle = await worker.start(noTimeoutWorkflow, {
+    const handle = await worker.start(noTimeoutWorkflow, {
         workflowId: "no-timeout",
         workflowExecutionTimeout: "5s",
     });
@@ -232,20 +232,20 @@ test("no-timeout-workflow", async (t) => {
     assert.equal(Counters.get("no-timeout-start"), 1);
     assert.equal(Counters.get("no-timeout-end"), 1);
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
     assert.ok(instance);
     assert.notEqual(instance.status, "timeout");
 });
 
-test("distance-workflow", async (t) => {
+void test("distance-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let handle = await worker.start(distanceWorkflow, { workflowId: "distance" });
-    let result = await handle.result();
+    const handle = await worker.start(distanceWorkflow, { workflowId: "distance" });
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, 2);
@@ -261,15 +261,15 @@ test("distance-workflow", async (t) => {
     assert.equal(instance.activities[1].result, 1);
 });
 
-test("move-workflow", async (t) => {
+void test("move-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let handle = await worker.start(moveWorkflow, { workflowId: "move" });
-    let result = await handle.result();
+    const handle = await worker.start(moveWorkflow, { workflowId: "move" });
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.deepEqual(result, { x: 0, y: 2 });
@@ -280,7 +280,7 @@ test("move-workflow", async (t) => {
     assert.deepEqual(instance.activities[1].args[0], { x: 0, y: 1 });
 });
 
-test("throw-error-workflow", async (t) => {
+void test("throw-error-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -288,7 +288,7 @@ test("throw-error-workflow", async (t) => {
     const workflowId = "throw-error";
     try {
         console.log("D");
-        let handle = await worker.start(throwErrorWorkflow, { workflowId });
+        const handle = await worker.start(throwErrorWorkflow, { workflowId });
         console.log("B");
         await handle.result();
         console.log("C");
@@ -299,7 +299,7 @@ test("throw-error-workflow", async (t) => {
     }
 
     console.log("1");
-    let instance = await worker.store.getInstance(workflowId);
+    const instance = await worker.store.getInstance(workflowId);
     console.log("2");
     assert.ok(instance?.end, "Expected instance end to be set.");
     assert.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
@@ -308,7 +308,7 @@ test("throw-error-workflow", async (t) => {
 
     assert.ok(instance);
     assert.equal(instance.activities.length, 1);
-    let activity = instance.activities[0];
+    const activity = instance.activities[0];
     assert.deepEqual(activity.args[0], "Message 1");
     assert.ok(instance.end);
     assert.deepEqual(activity.result, undefined);
@@ -319,12 +319,12 @@ test("throw-error-workflow", async (t) => {
     assert.ok(activity.end instanceof Date);
 });
 
-test("throw-workflow", async (t) => {
+void test("throw-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let handle = await worker.start(throwWorkflow, { workflowId: "throw" });
+    const handle = await worker.start(throwWorkflow, { workflowId: "throw" });
 
     // Assert
     try {
@@ -333,7 +333,7 @@ test("throw-workflow", async (t) => {
         assert.equal(typeof e, "string");
     }
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
     assert.ok(instance);
     assert.ok(instance.end, "Expected instance end to be set.");
     assert.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
@@ -342,34 +342,34 @@ test("throw-workflow", async (t) => {
     assert.equal(instance.error, "Message 1");
 });
 
-test("call-twice-workflow", async (t) => {
+void test("call-twice-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(callTwiceWorkflow);
-    let result = await handle.result();
+    const result = await handle.result();
 
     // Assert
     assert.equal(result, "ok");
 });
 
-test("no-store", async (t) => {
+void test("no-store", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
     const handle = await worker.start(noStore, { store: undefined });
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.equal(result, "OK");
     assert.ok(!instance);
 });
 
-test("nested-workflow", async (t) => {
+void test("nested-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -377,8 +377,8 @@ test("nested-workflow", async (t) => {
     const handle = await worker.start(nestedWorkflow, { workflowId: "parent" });
     await handle.result();
 
-    let parent = await worker.store.getInstance("parent");
-    let child = await worker.store.getInstance("child");
+    const parent = await worker.store.getInstance("parent");
+    const child = await worker.store.getInstance("child");
 
     // Assert
     assert.ok(parent !== undefined);
@@ -392,7 +392,7 @@ test("nested-workflow", async (t) => {
     assert.ok(parent.end > child.end);
 });
 
-test("long-workflow", async (t) => {
+void test("long-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -400,16 +400,16 @@ test("long-workflow", async (t) => {
     const handle = await worker.start(longWorkflow, { workflowId: "long" });
     await handle.result();
 
-    let large = await worker.store.getInstance("long");
+    const large = await worker.store.getInstance("long");
 
     // Assert
     assert.ok(large !== undefined);
     assert.equal(large.activities.length, 125);
 });
 
-test("large-workflow", async (t) => {
+void test("large-workflow", async (t) => {
     // Arrange
-    let long = Array.from(Array(100000).keys()).map(i => "A").join("");
+    const long = Array.from(Array(100000).keys()).map(i => "A").join("");
     const worker = Worker.getInstance();
 
     // Act
@@ -419,17 +419,17 @@ test("large-workflow", async (t) => {
     });
     await handle.result();
 
-    let large = await worker.store.getInstance("large");
+    const large = await worker.store.getInstance("large");
 
     // Assert
     assert.ok(large !== undefined);
     assert.equal(large.activities.length, 1);
-    let activity = large.activities[0];
+    const activity = large.activities[0];
     const result = activity.result as Array<any>;
     assert.ok(result.length >= 10000);
 });
 
-test("concurrent-workflow", async (t) => {
+void test("concurrent-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -438,7 +438,7 @@ test("concurrent-workflow", async (t) => {
     await handle.result();
 
     // Assert
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.ok(instance);
@@ -446,7 +446,7 @@ test("concurrent-workflow", async (t) => {
     assert.equal(instance.activities.length, 10);
 });
 
-test("greet-workflow-no-await-result", async (t) => {
+void test("greet-workflow-no-await-result", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -454,16 +454,15 @@ test("greet-workflow-no-await-result", async (t) => {
     const handle = await worker.start(greetWorkflow, { args: ["test no await"] });
     await sleep("5s");
 
-    let instance = await worker.store.getInstance(handle.workflowId);
+    const instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
     assert.ok(instance);
-    assert.ok(instance.end, "Expected the workflow to have ended")
+    assert.ok(instance.end, "Expected the workflow to have ended");
     assert.equal(instance.result, "Hello, test no await!");
 });
 
-
-test("now", async (t) => {
+void test("now", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -471,13 +470,13 @@ test("now", async (t) => {
     const handle = await worker.start(nowWorkflow, {
         store: new DurableFunctionsWorkflowHistoryStore({
             connectionString: "UseDevelopmentStorage=true",
-            serializer: superjson
+            serializer: superjson,
         }),
     });
 
-    let result = await handle.result();
+    const result = await handle.result();
 
-    let instance = await handle.store?.getInstance(handle.workflowId);
+    const instance = await handle.store?.getInstance(handle.workflowId);
 
     // Assert
     assert.ok(result instanceof Date, "Expected result to be Date");

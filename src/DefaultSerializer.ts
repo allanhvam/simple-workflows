@@ -1,4 +1,4 @@
-import { ISerializer } from "./ISerializer";
+import { type ISerializer } from "./ISerializer";
 
 /**
  * @internal
@@ -12,5 +12,5 @@ export class DefaultSerializer implements ISerializer {
     }
     equal = (a: any, b: any): boolean => {
         return this.stringify(a) === this.stringify(b);
-    }
+    };
 }

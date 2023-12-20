@@ -6,7 +6,7 @@ import { testWorkflow } from "./workflows/test-workflow";
 
 test.before(async () => {
     const worker = Worker.getInstance();
-    let store = new stores.DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true", taskHubName: "StoreTestWorkflow" });
+    const store = new stores.DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true", taskHubName: "StoreTestWorkflow" });
     // let store = new FileSystemWorkflowHistoryStore();
     await store.clear();
     // let store = new MemoryWorkflowHistoryStore();
@@ -14,7 +14,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-test("Workflow store, removeInstance", async (t) => {
+void test("Workflow store, removeInstance", async (t) => {
     // Arrange
     const workflowId = "test-store";
     const worker = Worker.getInstance();

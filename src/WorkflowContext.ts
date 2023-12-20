@@ -1,4 +1,4 @@
-import { IWorkflowContext } from "./IWorkflowContext";
+import { type IWorkflowContext } from "./IWorkflowContext";
 import { Worker } from "./Worker";
 
 export class WorkflowContext {

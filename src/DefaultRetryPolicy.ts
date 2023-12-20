@@ -1,11 +1,11 @@
-import { IRetryPolicy } from "./IRetryPolicy";
+import { type IRetryPolicy } from "./IRetryPolicy";
 import { sleep } from "./sleep";
 
 /**
  * @internal
  */
 export class DefaultRetryPolicy implements IRetryPolicy {
-    constructor(private retries: number) {
+    constructor(private readonly retries: number) {
 
     }
 
@@ -24,6 +24,6 @@ export class DefaultRetryPolicy implements IRetryPolicy {
                 await sleep(i * 5000);
             }
         }
-        return Promise.reject(e);
+        return await Promise.reject(e);
     }
 }
