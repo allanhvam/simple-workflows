@@ -14,7 +14,7 @@ export class Worker implements IWorker {
     private static instance: IWorker;
 
     public store: IWorkflowHistoryStore = new MemoryWorkflowHistoryStore();
-    public log: (s: string) => void = undefined;
+    public log: ((s: string) => void) | undefined = undefined;
 
     private constructor() {
         // Private
@@ -35,7 +35,7 @@ export class Worker implements IWorker {
         }
 
         let worker = Worker.getInstance();
-        let store = worker.store;
+        let store: IWorkflowHistoryStore | undefined = worker.store;
         if (options && Object.prototype.hasOwnProperty.call(options, "store")) {
             store = options.store;
         }
@@ -62,22 +62,24 @@ export class Worker implements IWorker {
 
         if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "result")) {
             workflowContext.log(() => `${workflowId}: skip (already executed)`);
+            const result = workflowInstance.result;
             return {
                 workflowId,
                 store,
                 result: async () => {
-                    return workflowInstance.result as Promise<WorkflowResultType<T>>;
+                    return result as Promise<WorkflowResultType<T>>;
                 },
             };
         }
 
         if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "error")) {
             workflowContext.log(() => `${workflowId}: skip (error)`);
+            const error = workflowInstance.error;
             return {
                 workflowId,
                 store,
                 result: async () => {
-                    let reason = deserializeError(workflowInstance.error);
+                    let reason = deserializeError(error);
                     return Promise.reject(reason);
                 },
             };
@@ -86,7 +88,7 @@ export class Worker implements IWorker {
         if (!workflowInstance) {
             workflowInstance = {
                 instanceId: workflowId,
-                args: options?.args,
+                args: options?.args || [],
                 start: new Date(),
                 activities: [],
             };
@@ -110,19 +112,27 @@ export class Worker implements IWorker {
             }
 
             await workflowContext.mutex.runExclusive(async () => {
+                if (!workflowInstance) {
+                    throw new Error(`Expected workflow instance to be set.`);
+                }
                 if (store) {
+                    const id = workflowInstance.instanceId;
                     workflowInstance = await store.getInstance(workflowInstance.instanceId);
-                    if (workflowInstance.status === "timeout") {
+                    if (!workflowInstance) {
+                        throw new Error(`Workflow '${id}' not found in store.`);
+                    }
+                    if (workflowInstance?.status === "timeout") {
                         return Promise.reject(error);
                     }
                 }
 
                 workflowInstance.end = new Date();
+                const duration = `${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms`;
                 if (!isError) {
-                    workflowContext.log(() => `${workflowId}: end (${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms)`);
+                    workflowContext.log(() => `${workflowId}: end (${duration})`);
                     workflowInstance.result = result;
                 } else {
-                    workflowContext.log(() => `${workflowId}: end (error, ${workflowInstance.end.getTime() - workflowInstance.start.getTime()} ms)`);
+                    workflowContext.log(() => `${workflowId}: end (error, ${duration})`);
                     workflowInstance.error = serializeError(error);
                 }
 
@@ -148,26 +158,28 @@ export class Worker implements IWorker {
             let timeout = async () => {
                 await sleep(ms);
 
-                if (store) {
+                if (store && workflowInstance) {
                     workflowInstance = await store.getInstance(workflowInstance.instanceId);
                 }
 
-                if (workflowInstance.end) {
+                if (workflowInstance?.end) {
                     return;
                 }
 
                 await workflowContext.mutex.runExclusive(async () => {
-                    if (store) {
+                    if (store && workflowInstance) {
                         workflowInstance = await store.getInstance(workflowInstance.instanceId);
                     }
-                    workflowInstance.status = "timeout";
-                    if (store) {
-                        store.setInstance(workflowInstance);
+                    if (workflowInstance) {
+                        workflowInstance.status = "timeout";
+                        if (store) {
+                            await store.setInstance(workflowInstance);
+                        }
                     }
                 });
 
                 workflowContext.log(() => `${workflowId}: end (timeout)`);
-                return Promise.reject(new Error(`Workflow ${workflowInstance.instanceId} timeout.`));
+                return Promise.reject(new Error(`Workflow ${workflowInstance?.instanceId} timeout.`));
             };
 
             promise = Promise.race([promise, timeout()]);

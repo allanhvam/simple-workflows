@@ -24,7 +24,7 @@ export type WorkflowActivityInstance = {
 }
 
 export interface IWorkflowHistoryStore {
-    getInstance: (id: string) => Promise<WorkflowInstance>;
+    getInstance: (id: string) => Promise<WorkflowInstance | undefined>;
     setInstance: (instance: WorkflowInstance) => Promise<void>;
     getInstances: () => Promise<Array<WorkflowInstance>>;
     getInstanceHeaders: () => Promise<Array<WorkflowInstanceHeader>>;

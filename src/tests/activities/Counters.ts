@@ -4,7 +4,7 @@ export class Counters {
 
     public static get(name: string): number {
         if (this.counters.has(name)) {
-            return Counters.counters.get(name);
+            return this.counters.get(name) || 0;
         }
         return 0;
     }

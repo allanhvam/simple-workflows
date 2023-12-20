@@ -3,7 +3,7 @@ import { MutexInterface } from "async-mutex";
 
 export interface IWorkflowContext {
     workflowId: string;
-    store: IWorkflowHistoryStore,
+    store?: IWorkflowHistoryStore,
     log: (f: () => string) => void;
     // @internal
     mutex: MutexInterface;

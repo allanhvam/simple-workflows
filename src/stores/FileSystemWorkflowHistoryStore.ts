@@ -10,17 +10,14 @@ import { isDeepStrictEqual } from "util";
 
 export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];
+    private options: { path: string, serializer: ISerializer };
 
-    public constructor(private options?: { path?: string, serializer?: ISerializer }) {
-        if (!this.options) {
-            this.options = {};
-        }
-        if (!this.options.path) {
-            this.options.path = resolve(cwd(), "./workflow-history/");
-        }
-        if (!this.options.serializer) {
-            this.options.serializer = new DefaultSerializer();
-        }
+    public constructor(options?: { path?: string, serializer?: ISerializer }) {
+        this.options = {
+            path: options?.path || resolve(cwd(), "./workflow-history/"),
+            serializer: options?.serializer || new DefaultSerializer(),
+        };
+
         if (!fs.existsSync(this.options.path)) {
             throw new Error(`simple-workflows: FileSystemWorkflowHistoryStore path ${this.options.path} does not exist.`);
         }
@@ -30,7 +27,7 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         return (this.options.serializer.equal || isDeepStrictEqual)(val1, val2);
     }
 
-    public async getInstance(id: string): Promise<WorkflowInstance> {
+    public async getInstance(id: string): Promise<WorkflowInstance | undefined> {
         let filePath = resolve(this.options.path, `${id}.json`);
         if (!fs.existsSync(filePath)) {
             return Promise.resolve(undefined);
@@ -110,7 +107,9 @@ export class FileSystemWorkflowHistoryStore implements IWorkflowHistoryStore {
         for (let i = 0; i !== instanceIds.length; i++) {
             const id = instanceIds[i];
             const instance = await this.getInstance(id);
-            instances.push(instance);
+            if (instance) {
+                instances.push(instance);
+            }
         }
         return instances;
     }

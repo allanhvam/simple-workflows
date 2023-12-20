@@ -70,7 +70,7 @@ const toJSON = from => {
     return json;
 };
 
-const destroyCircular = <ErrorType>({
+const destroyCircular = <ErrorType extends object>({
     from,
     seen,
     to_,
@@ -97,7 +97,7 @@ const destroyCircular = <ErrorType>({
         }
 
         // TODO: Use `stream.isReadable()` when targeting Node.js 18.
-        if (value !== null && typeof value === "object" && typeof value.pipe === "function") {
+        if (value !== null && typeof value === "object" && "pipe" in value && typeof value.pipe === "function") {
             to[key] = "[object Stream]";
             continue;
         }

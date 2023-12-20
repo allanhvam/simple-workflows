@@ -26,7 +26,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 }
                 let { workflowId, store, log, mutex } = context;
 
-                let serializeArg = (arg: any): string => {
+                let serializeArg = (arg: any): string | undefined => {
                     if (arg === undefined) {
                         return "undefined";
                     } else if (arg === null) {
@@ -68,7 +68,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
                 let originalArgs = structuredClone(args);
 
-                let startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout"> => {
+                let startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout" | undefined> => {
                     let instance = await store?.getInstance(workflowId);
                     if (instance?.status === "timeout") {
                         return instance?.status;
@@ -85,7 +85,9 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                             start: new Date(),
                         };
                         instance?.activities.push(activity);
-                        await store?.setInstance(instance);
+                        if (instance) {
+                            await store?.setInstance(instance);
+                        }
                     }
 
                     return activity;
@@ -110,34 +112,38 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 let error: any;
                 let executions = 0;
                 try {
-                    if (options?.retry > 0) {
+                    if (options?.retry !== undefined && options?.retry > 0) {
                         let retryPolicy = new DefaultRetryPolicy(options.retry);
                         result = await retryPolicy.retry(() => {
                             executions++;
                             return f(...args);
                         }, (e) => {
                             let message = `retry, execution #${executions} failed`;
-                            if (e && !e.stack && "toString" in e) {
+                            if (e && typeof e === "object" && !e.stack && "toString" in e) {
                                 message = `${message} (${e.toString()})`;
+                            }
+                            if (e && (typeof e === "string" || typeof e == "number")) {
+                                message = `${message} (${String(e)})`;
                             }
                             log(() => `${logPrefix}: ${message}`);
                             if (e?.stack && typeof e.stack === "string") {
                                 const stack = e.stack.split("\n");
-                                stack.forEach(element => {
+                                stack.forEach((element: any) => {
                                     log(() => `${logPrefix}: ${element}`);
                                 });
                             }
                         });
                     } else {
-                        result = await f(...args);
+                        result = await f(...args).catch((ex) => {
+                            throw ex;
+                        });
                     }
                 } catch (e) {
-                    result = Promise.reject(e);
                     error = e;
                 }
 
                 await mutex.runExclusive(async () => {
-                    let instance: WorkflowInstance = undefined;
+                    let instance: WorkflowInstance | undefined = undefined;
                     if (store) {
                         instance = await store.getInstance(workflowId);
                         const equal = store?.equal || isDeepStrictEqual;
@@ -147,19 +153,23 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                         throw new Error(`simple-workflows: Failed to find activity '${activityName}' on workflow '${workflowId}', could be a error in the store or serialization.`);
                     }
                     activity.end = new Date();
+                    const duration = `${activity.end.getTime() - activity.start.getTime()} ms`;
                     if (error) {
                         activity.error = serializeError(error);
-                        log(() => `${logPrefix}: end (error, ${executions > 1 ? `${executions} executions, ` : ""}${activity.end.getTime() - activity.start.getTime()} ms)`);
+                        log(() => `${logPrefix}: end (error, ${executions > 1 ? `${executions} executions, ` : ""}${duration})`);
                     } else {
                         activity.result = result;
-                        log(() => `${logPrefix}: end (${executions > 1 ? `${executions} executions, ` : ""}${activity.end.getTime() - activity.start.getTime()} ms)`);
+                        log(() => `${logPrefix}: end (${executions > 1 ? `${executions} executions, ` : ""}${duration})`);
                     }
 
-                    if (store) {
+                    if (store && instance) {
                         await store?.setInstance(instance);
                     }
                 });
 
+                if (error) {
+                    return Promise.reject(error);
+                }
                 return result;
             };
         },

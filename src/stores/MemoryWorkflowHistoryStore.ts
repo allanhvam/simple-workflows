@@ -4,7 +4,7 @@ import { IWorkflowHistoryStore, WorkflowInstance, WorkflowInstanceHeader } from 
 export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];
 
-    public async getInstance(id: string): Promise<WorkflowInstance> {
+    public async getInstance(id: string) {
         let workflowInstance = this.workflowHistory.find(w => w.instanceId === id);
 
         return Promise.resolve(workflowInstance);

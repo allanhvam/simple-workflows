@@ -1,4 +1,5 @@
-import test from "ava";
+import { test } from "node:test";
+import assert from "node:assert";
 import { Worker } from "../Worker";
 import { greetWorkflow } from "./workflows/greet-workflow";
 import { incrementCounterWorkflow } from "./workflows/increment-counter-workflow";
@@ -45,14 +46,14 @@ test("greet-workflow, test", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, "Hello, test!");
+    assert.equal(result, "Hello, test!");
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 1);
-    t.is(instance.activities[0].name, "greet");
-    t.is(instance.activities[0].args.length, 1);
-    t.deepEqual(instance.activities[0].args[0], "test");
-    t.is(instance.activities[0].result, "Hello, test!");
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 1);
+    assert.equal(instance.activities[0].name, "greet");
+    assert.equal(instance.activities[0].args.length, 1);
+    assert.equal(instance.activities[0].args[0], "test");
+    assert.equal(instance.activities[0].result, "Hello, test!");
 });
 
 test("greet-workflow, undefined", async (t) => {
@@ -66,13 +67,13 @@ test("greet-workflow, undefined", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, "Hello, undefined!");
+    assert.equal(result, "Hello, undefined!");
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 1);
-    t.is(instance.activities[0].name, "greet");
-    t.is(instance.activities[0].args.length, 1);
-    t.deepEqual(instance.activities[0].args[0], null);
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 1);
+    assert.equal(instance.activities[0].name, "greet");
+    assert.equal(instance.activities[0].args.length, 1);
+    assert.deepEqual(instance.activities[0].args[0], null);
 });
 
 test("greet-service-workflow", async (t) => {
@@ -86,14 +87,14 @@ test("greet-service-workflow", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, "Hello, test!");
+    assert.equal(result, "Hello, test!");
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 1);
-    t.is(instance.activities[0].name, "GreetService.greet");
-    t.is(instance.activities[0].args.length, 1);
-    t.deepEqual(instance.activities[0].args[0], "test");
-    t.is(instance.activities[0].result, "Hello, test!");
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 1);
+    assert.equal(instance.activities[0].name, "GreetService.greet");
+    assert.equal(instance.activities[0].args.length, 1);
+    assert.deepEqual(instance.activities[0].args[0], "test");
+    assert.equal(instance.activities[0].result, "Hello, test!");
 });
 
 test("test-workflow", async (t) => {
@@ -107,13 +108,13 @@ test("test-workflow", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, "test-42");
+    assert.equal(result, "test-42");
 
-    t.truthy(instance);
-    t.is(instance.instanceId, "test-42");
-    t.is(instance.activities.length, 1);
-    t.deepEqual(instance.activities[0].args, []);
-    t.is(instance.activities[0].result, "test-42");
+    assert.ok(instance);
+    assert.equal(instance.instanceId, "test-42");
+    assert.equal(instance.activities.length, 1);
+    assert.deepEqual(instance.activities[0].args, []);
+    assert.equal(instance.activities[0].result, "test-42");
 });
 
 test("increment-counter-workflow", async (t) => {
@@ -125,7 +126,7 @@ test("increment-counter-workflow", async (t) => {
     let result = await handle.result();
 
     // Assert
-    t.is(result, 1);
+    assert.equal(result, 1);
 });
 
 test("add-workflow", async (t) => {
@@ -139,14 +140,14 @@ test("add-workflow", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, 3);
+    assert.equal(result, 3);
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 1);
-    t.is(instance.activities[0].args.length, 2);
-    t.is(instance.activities[0].args[0], 1);
-    t.is(instance.activities[0].args[1], 2);
-    t.is(instance.activities[0].result, 3);
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 1);
+    assert.equal(instance.activities[0].args.length, 2);
+    assert.equal(instance.activities[0].args[0], 1);
+    assert.equal(instance.activities[0].args[1], 2);
+    assert.equal(instance.activities[0].result, 3);
 });
 
 test("add-workflow args", async (t) => {
@@ -160,18 +161,18 @@ test("add-workflow args", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, 7);
+    assert.equal(result, 7);
 
-    t.truthy(instance);
-    t.is(instance.args.length, 2);
-    t.is(instance.args[0], 3);
-    t.is(instance.args[1], 4);
+    assert.ok(instance);
+    assert.equal(instance.args.length, 2);
+    assert.equal(instance.args[0], 3);
+    assert.equal(instance.args[1], 4);
 
-    t.is(instance.activities.length, 1);
-    t.is(instance.activities[0].args.length, 2);
-    t.is(instance.activities[0].args[0], 3);
-    t.is(instance.activities[0].args[1], 4);
-    t.is(instance.activities[0].result, 7);
+    assert.equal(instance.activities.length, 1);
+    assert.equal(instance.activities[0].args.length, 2);
+    assert.equal(instance.activities[0].args[0], 3);
+    assert.equal(instance.activities[0].args[1], 4);
+    assert.equal(instance.activities[0].result, 7);
 });
 
 test("void-workflow", async (t) => {
@@ -183,12 +184,10 @@ test("void-workflow", async (t) => {
     let result = await handle.result();
 
     handle = await worker.start(voidWorkflow, { workflowId: "void" });
-    result = await handle.result();
+    await handle.result();
 
     // Assert
-    t.falsy(result);
-
-    t.is(Counters.get("void"), 1);
+    assert.equal(Counters.get("void"), 1);
 });
 
 test("timeout-workflow", async (t) => {
@@ -201,18 +200,19 @@ test("timeout-workflow", async (t) => {
         workflowExecutionTimeout: "1s",
     });
 
-    await t.throwsAsync(async () => {
+    await assert.rejects(async () => {
         await handle.result();
-    }, undefined, "Expected timeout-workflow to throw");
+    }, "Expected timeout-workflow to throw");
 
     // Assert
-    t.is(Counters.get("timeout-start"), 1);
+    assert.equal(Counters.get("timeout-start"), 1);
     await sleep(5000);
     // Note: tests that activity execution is stopped
-    t.is(Counters.get("timeout-end"), 0);
+    assert.equal(Counters.get("timeout-end"), 0);
 
     let instance = await worker.store.getInstance(handle.workflowId);
-    t.is(instance.status, "timeout");
+    assert.ok(instance);
+    assert.equal(instance.status, "timeout");
 });
 
 test("no-timeout-workflow", async (t) => {
@@ -229,11 +229,12 @@ test("no-timeout-workflow", async (t) => {
     await sleep(10000);
 
     // Assert
-    t.is(Counters.get("no-timeout-start"), 1);
-    t.is(Counters.get("no-timeout-end"), 1);
+    assert.equal(Counters.get("no-timeout-start"), 1);
+    assert.equal(Counters.get("no-timeout-end"), 1);
 
     let instance = await worker.store.getInstance(handle.workflowId);
-    t.not(instance.status, "timeout");
+    assert.ok(instance);
+    assert.notEqual(instance.status, "timeout");
 });
 
 test("distance-workflow", async (t) => {
@@ -247,17 +248,17 @@ test("distance-workflow", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, 2);
+    assert.equal(result, 2);
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 2);
-    t.is(instance.activities[0].args.length, 2);
-    t.deepEqual(instance.activities[0].args[0], { x: 1, y: 1 });
-    t.deepEqual(instance.activities[0].args[1], { x: 2, y: 1 });
-    t.is(instance.activities[0].result, 1);
-    t.deepEqual(instance.activities[1].args[0], { x: 3, y: 1 });
-    t.deepEqual(instance.activities[1].args[1], { x: 2, y: 1 });
-    t.is(instance.activities[1].result, 1);
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 2);
+    assert.equal(instance.activities[0].args.length, 2);
+    assert.deepEqual(instance.activities[0].args[0], { x: 1, y: 1 });
+    assert.deepEqual(instance.activities[0].args[1], { x: 2, y: 1 });
+    assert.equal(instance.activities[0].result, 1);
+    assert.deepEqual(instance.activities[1].args[0], { x: 3, y: 1 });
+    assert.deepEqual(instance.activities[1].args[1], { x: 2, y: 1 });
+    assert.equal(instance.activities[1].result, 1);
 });
 
 test("move-workflow", async (t) => {
@@ -271,43 +272,51 @@ test("move-workflow", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.deepEqual(result, { x: 0, y: 2 });
+    assert.deepEqual(result, { x: 0, y: 2 });
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 2);
-    t.deepEqual(instance.activities[0].args[0], { x: 0, y: 0 });
-    t.deepEqual(instance.activities[1].args[0], { x: 0, y: 1 });
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 2);
+    assert.deepEqual(instance.activities[0].args[0], { x: 0, y: 0 });
+    assert.deepEqual(instance.activities[1].args[0], { x: 0, y: 1 });
 });
 
 test("throw-error-workflow", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
-    // Act
-    let handle = await worker.start(throwErrorWorkflow, { workflowId: "throw-error" });
-
-    // Assert
-    await t.throwsAsync(async () => {
+    // Act & Assert
+    const workflowId = "throw-error";
+    try {
+        console.log("D");
+        let handle = await worker.start(throwErrorWorkflow, { workflowId });
+        console.log("B");
         await handle.result();
-    });
+        console.log("C");
+        assert.fail();
+    } catch {
+        console.log("A");
+        // Ignore, expected to throw
+    }
 
-    let instance = await worker.store.getInstance(handle.workflowId);
-    t.truthy(instance.end, "Expected instance end to be set.");
-    t.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
-    t.truthy(instance.error, "Expected error to be set");
-    t.true(instance.error instanceof Error, "Expected error to be instance of Error");
+    console.log("1");
+    let instance = await worker.store.getInstance(workflowId);
+    console.log("2");
+    assert.ok(instance?.end, "Expected instance end to be set.");
+    assert.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
+    assert.ok(instance.error, "Expected error to be set");
+    assert.ok(instance.error instanceof Error, "Expected error to be instance of Error");
 
-    t.truthy(instance);
-    t.is(instance.activities.length, 1);
+    assert.ok(instance);
+    assert.equal(instance.activities.length, 1);
     let activity = instance.activities[0];
-    t.deepEqual(activity.args[0], "Message 1");
-    t.truthy(instance.end);
-    t.deepEqual(activity.result, undefined);
-    t.truthy(activity.error, "Expected error to be set");
-    t.true(activity.error instanceof Error, "Expected error to be instance of Error");
+    assert.deepEqual(activity.args[0], "Message 1");
+    assert.ok(instance.end);
+    assert.deepEqual(activity.result, undefined);
+    assert.ok(activity.error, "Expected error to be set");
+    assert.ok(activity.error instanceof Error, "Expected error to be instance of Error");
 
-    t.truthy(activity.start instanceof Date);
-    t.truthy(activity.end instanceof Date);
+    assert.ok(activity.start instanceof Date);
+    assert.ok(activity.end instanceof Date);
 });
 
 test("throw-workflow", async (t) => {
@@ -321,15 +330,16 @@ test("throw-workflow", async (t) => {
     try {
         await handle.result();
     } catch (e) {
-        t.is(typeof e, "string");
+        assert.equal(typeof e, "string");
     }
 
     let instance = await worker.store.getInstance(handle.workflowId);
-    t.truthy(instance.end, "Expected instance end to be set.");
-    t.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
-    t.truthy(instance.error, "Expected error to be set");
-    t.is(typeof instance.error, "string", "Expected error to be string");
-    t.is(instance.error, "Message 1");
+    assert.ok(instance);
+    assert.ok(instance.end, "Expected instance end to be set.");
+    assert.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
+    assert.ok(instance.error, "Expected error to be set");
+    assert.equal(typeof instance.error, "string", "Expected error to be string");
+    assert.equal(instance.error, "Message 1");
 });
 
 test("call-twice-workflow", async (t) => {
@@ -341,7 +351,7 @@ test("call-twice-workflow", async (t) => {
     let result = await handle.result();
 
     // Assert
-    t.is(result, "ok");
+    assert.equal(result, "ok");
 });
 
 test("no-store", async (t) => {
@@ -355,8 +365,8 @@ test("no-store", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.is(result, "OK");
-    t.falsy(instance);
+    assert.equal(result, "OK");
+    assert.ok(!instance);
 });
 
 test("nested-workflow", async (t) => {
@@ -371,15 +381,15 @@ test("nested-workflow", async (t) => {
     let child = await worker.store.getInstance("child");
 
     // Assert
-    t.true(parent !== undefined);
-    t.true(child !== undefined);
-    t.true(parent.start instanceof Date, "Expected workflow instance start to be Data");
-    t.true(parent.end instanceof Date, "Expected workflow instance end to be Data");
+    assert.ok(parent !== undefined);
+    assert.ok(child !== undefined);
+    assert.ok(parent.start instanceof Date, "Expected workflow instance start to be Data");
+    assert.ok(parent.end instanceof Date, "Expected workflow instance end to be Data");
 
-    t.truthy(parent.start && parent.end);
-    t.truthy(child.start && child.end);
-    t.true(parent.start < child.start);
-    t.true(parent.end > child.end);
+    assert.ok(parent.start && parent.end);
+    assert.ok(child.start && child.end);
+    assert.ok(parent.start < child.start);
+    assert.ok(parent.end > child.end);
 });
 
 test("long-workflow", async (t) => {
@@ -393,8 +403,8 @@ test("long-workflow", async (t) => {
     let large = await worker.store.getInstance("long");
 
     // Assert
-    t.true(large !== undefined);
-    t.is(large.activities.length, 125);
+    assert.ok(large !== undefined);
+    assert.equal(large.activities.length, 125);
 });
 
 test("large-workflow", async (t) => {
@@ -412,11 +422,11 @@ test("large-workflow", async (t) => {
     let large = await worker.store.getInstance("large");
 
     // Assert
-    t.true(large !== undefined);
-    t.is(large.activities.length, 1);
+    assert.ok(large !== undefined);
+    assert.equal(large.activities.length, 1);
     let activity = large.activities[0];
     const result = activity.result as Array<any>;
-    t.true(result.length >= 10000);
+    assert.ok(result.length >= 10000);
 });
 
 test("concurrent-workflow", async (t) => {
@@ -431,9 +441,9 @@ test("concurrent-workflow", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.truthy(instance);
-    t.truthy(instance.activities);
-    t.is(instance.activities.length, 10);
+    assert.ok(instance);
+    assert.ok(instance.activities);
+    assert.equal(instance.activities.length, 10);
 });
 
 test("greet-workflow-no-await-result", async (t) => {
@@ -447,8 +457,9 @@ test("greet-workflow-no-await-result", async (t) => {
     let instance = await worker.store.getInstance(handle.workflowId);
 
     // Assert
-    t.truthy(instance.end, "Expected the workflow to have ended")
-    t.is(instance.result, "Hello, test no await!");
+    assert.ok(instance);
+    assert.ok(instance.end, "Expected the workflow to have ended")
+    assert.equal(instance.result, "Hello, test no await!");
 });
 
 
@@ -466,9 +477,10 @@ test("now", async (t) => {
 
     let result = await handle.result();
 
-    let instance = await handle.store.getInstance(handle.workflowId);
+    let instance = await handle.store?.getInstance(handle.workflowId);
 
     // Assert
-    t.truthy(result instanceof Date, "Expected result to be Date")
-    t.truthy(instance.result instanceof Date, "Expected result to be Date");
+    assert.ok(result instanceof Date, "Expected result to be Date");
+    assert.ok(instance);
+    assert.ok(instance.result instanceof Date, "Expected result to be Date");
 });

@@ -1,4 +1,5 @@
-import test from "ava";
+import { test } from "node:test";
+import assert from "node:assert";
 import * as stores from "../stores";
 import { Worker } from "../Worker";
 import { testWorkflow } from "./workflows/test-workflow";
@@ -27,10 +28,10 @@ test("Workflow store, removeInstance", async (t) => {
 
     // Assert
     let workflow = workflowInstances.find(wi => wi.instanceId === workflowId);
-    t.truthy(workflow);
+    assert.ok(workflow);
     await store.removeInstance(workflow.instanceId);
 
     workflowInstances = await store.getInstanceHeaders();
     workflow = workflowInstances.find(wi => wi.instanceId === workflowId);
-    t.falsy(workflow);
+    assert.ok(!workflow);
 });

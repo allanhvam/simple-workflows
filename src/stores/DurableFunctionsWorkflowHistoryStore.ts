@@ -30,26 +30,33 @@ interface IDurableFunctionsWorkflowInstance {
     RuntimeStatus: "Pending" | "Running" | "Completed" | "ContinuedAsNew" | "Failed" | "Terminated";
     LastUpdatedTime: Date;
     TaskHubName: string;
-    CustomStatus: string;
+    CustomStatus?: string;
     ExecutionId: string;
     Output: string;
-    CompletedTime: Date,
+    CompletedTime?: Date,
 }
 
 export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistoryStore {
-    private initialized: boolean;
+    private initialized?: boolean;
     private history: TableClient;
     private instances: TableClient;
     private largeMessages: ContainerClient;
     private mutex = new Mutex();
+    private options: { connectionString: string, taskHubName: string, serializer: ISerializer };
 
-    constructor(private options: { connectionString: string, taskHubName?: string, serializer?: ISerializer }) {
-        if (!this.options.taskHubName) {
-            this.options.taskHubName = "Workflow";
+    constructor(options: { connectionString: string, taskHubName?: string, serializer?: ISerializer }) {
+        this.options = {
+            connectionString: options.connectionString,
+            taskHubName: options.taskHubName || "Workflow",
+            serializer: options.serializer || new DefaultSerializer(),
         }
-        if (!this.options.serializer) {
-            this.options.serializer = new DefaultSerializer();
-        }
+
+        const { connectionString, taskHubName } = this.options;
+        this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`);
+        this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`);
+
+        const blobServicesClient = BlobServiceClient.fromConnectionString(connectionString);
+        this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
     }
 
     public equal = (val1: any, val2: any): boolean => {
@@ -61,18 +68,9 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             return;
         }
 
-        let { connectionString, taskHubName } = this.options;
+        await this.history.createTable();
+        await this.instances.createTable();
 
-        let tableServiceClient = TableServiceClient.fromConnectionString(connectionString);
-        await tableServiceClient.createTable(`${taskHubName}History`);
-        await tableServiceClient.createTable(`${taskHubName}Instances`);
-
-        this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`);
-        this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`);
-
-        let blobServicesClient = BlobServiceClient.fromConnectionString(connectionString);
-
-        this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
         await this.largeMessages.createIfNotExists();
 
         this.initialized = true;
@@ -89,7 +87,10 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         return hex;
     }
 
-    private getDate(date: Date): Date {
+    private getDate(date: Date): Date;
+    private getDate(date: undefined): undefined;
+    private getDate(date: Date | undefined): Date | undefined;
+    private getDate(date: Date | undefined): Date | undefined {
         // NOTE: Somewhere in the table store api it truncates the milliseconds stored if it ends on 0.
         // eg. 2022-03-16T18:47:13.100Z is truncated to 2022-03-16T18:47:13.1Z in table storage.
         // Durable Functions Monitor Gantt chart expects dates to have 24 length, hence this small check and 
@@ -118,7 +119,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         await this.init();
     }
 
-    public async getInstance(id: string): Promise<WorkflowInstance> {
+    public async getInstance(id: string): Promise<WorkflowInstance | undefined> {
         return await this.mutex.runExclusive(async () => {
             await this.init();
 
@@ -126,10 +127,10 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         });
     }
 
-    private async getInstanceInternal(id: string): Promise<WorkflowInstance> {
+    private async getInstanceInternal(id: string): Promise<WorkflowInstance | undefined> {
         async function streamToBuffer(readableStream: NodeJS.ReadableStream): Promise<Buffer> {
             return new Promise((resolve, reject) => {
-                const chunks = [];
+                const chunks = new Array<Buffer>();
                 readableStream.on("data", (data) => {
                     chunks.push(data instanceof Buffer ? data : Buffer.from(data));
                 });
@@ -140,21 +141,24 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             });
         }
 
-        let getBlob = async (blobName: string): Promise<any> => {
-            let blockBlobClient = this.largeMessages.getBlockBlobClient(blobName);
+        let getBlob = async (blobName: string): Promise<any | undefined> => {
+            let blockBlobClient = this.largeMessages?.getBlockBlobClient(blobName);
 
-            const downloadBlockBlobResponse = await blockBlobClient.download();
+            const downloadBlockBlobResponse = await blockBlobClient?.download();
+            if (!downloadBlockBlobResponse.readableStreamBody) {
+                return undefined;
+            }
             let buffer = await streamToBuffer(downloadBlockBlobResponse.readableStreamBody);
 
             let unzipped = zlib.unzipSync(buffer).toString();
             return this.options.serializer.parse(unzipped);
         };
 
-        let entity: GetTableEntityResponse<TableEntityResult<IDurableFunctionsWorkflowInstance>> = undefined;
+        let entity: GetTableEntityResponse<TableEntityResult<IDurableFunctionsWorkflowInstance>> | undefined = undefined;
         try {
-            entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "");
-        } catch (e) {
-            if (e.statusCode === 404) {
+            entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "")
+        } catch (e: unknown) {
+            if (typeof e === 'object' && e && "statusCode" in e && e.statusCode === 404) {
                 return undefined;
             }
             throw e;
@@ -163,7 +167,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
         let instance: WorkflowInstance = {
             instanceId: id,
             status: entity.CustomStatus as any,
-            args: undefined,
+            args: [],
             start: entity.CreatedTime,
             end: entity.CompletedTime,
             activities: new Array<WorkflowActivityInstance>(),
@@ -177,7 +181,8 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             }
         }
 
-        let historyIterator = this.history.listEntities<IDurableFunctionsWorkflowHistory>({ queryOptions: { filter: `PartitionKey eq '${id}'` } }).byPage({ maxPageSize: 50 });
+        const filter = `PartitionKey eq '${id}'`;
+        let historyIterator = this.history.listEntities<IDurableFunctionsWorkflowHistory>({ queryOptions: { filter } }).byPage({ maxPageSize: 50 });
 
         for await (const page of historyIterator) {
             for await (const entity of page) {
@@ -186,13 +191,17 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     if (entity.InputBlobName) {
                         args = await getBlob(entity.InputBlobName);
                     } else {
-                        args = this.options.serializer.parse(entity.Input);
+                        if (entity.Input) {
+                            args = this.options.serializer.parse(entity.Input);
+                        } else {
+                            args = [];
+                        }
                     }
 
                     instance.activities.push(
                         {
                             args,
-                            name: entity.Name,
+                            name: entity.Name || "",
                             start: entity["_Timestamp"],
                         },
                     );
@@ -206,11 +215,19 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                 }
 
                 if (entity.EventType === "TaskCompleted") {
-                    let activity = instance.activities[entity.TaskScheduledId];
+                    const taskScheduledId = entity.TaskScheduledId;
+                    if (typeof taskScheduledId === "undefined") {
+                        throw new Error("Expected TaskScheduledId to be set");
+                    }
+                    let activity = instance.activities[taskScheduledId];
                     activity.end = entity["_Timestamp"];
                     activity.result = result;
                 } else if (entity.EventType === "TaskFailed") {
-                    let activity = instance.activities[entity.TaskScheduledId];
+                    const taskScheduledId = entity.TaskScheduledId;
+                    if (typeof taskScheduledId === "undefined") {
+                        throw new Error("Expected TaskScheduledId to be set");
+                    }
+                    let activity = instance.activities[taskScheduledId];
                     activity.end = entity["_Timestamp"];
                     activity.error = result && deserializeError(result);
                 }
@@ -239,7 +256,10 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
 
     public async setInstance(instance: WorkflowInstance): Promise<void> {
         await this.mutex.runExclusive(async () => {
-            let isLarge = (data: string): boolean => {
+            let isLarge = (data: string | undefined): boolean => {
+                if (!data) {
+                    return false;
+                }
                 let sixtyKb = 60 * 128;
                 if (data && Buffer.byteLength(data) >= sixtyKb) {
                     return true;
@@ -258,7 +278,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
 
             await this.init();
 
-            let blobs = new Array<{ name: string, data: string }>();
+            let blobs = new Array<{ name: string, data?: string }>();
             let error = Object.prototype.hasOwnProperty.call(instance, "error");
             const task: TableEntity<IDurableFunctionsWorkflowInstance> = {
                 partitionKey: instance.instanceId,
@@ -343,7 +363,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     row = {
                         partitionKey: instance.instanceId,
                         rowKey: this.toHex(rowKey++, 16),
-                        Name: null,
+                        Name: null as any,
                         EventId: -1,
                         _Timestamp: this.getDate(activity.end),
                         EventType: error ? "TaskFailed" : "TaskCompleted",
@@ -410,6 +430,9 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             // Blobs
             for (let i = 0; i !== blobs.length; i++) {
                 let { name, data } = blobs[i];
+                if (!data) {
+                    continue;
+                }
                 let zipped = zlib.gzipSync(data);
 
                 const blockBlobClient = this.largeMessages.getBlockBlobClient(name);
@@ -440,7 +463,14 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             const workflows = new Array<WorkflowInstance>();
             for await (const page of instancesIterator) {
                 for await (const entity of page) {
-                    workflows.push(await this.getInstanceInternal(entity.Name));
+                    const name = entity.Name;
+                    if (!name) {
+                        continue;
+                    }
+                    const instance = await this.getInstanceInternal(name);
+                    if (instance) {
+                        workflows.push(instance);
+                    }
                 }
             }
 
@@ -474,7 +504,7 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
 
                         headers.push(header);
                     } catch (e) {
-                        if (e.statusCode === 404) {
+                        if (typeof e === "object" && e && "statusCode" in e && e.statusCode === 404) {
                             continue;
                         }
                         throw e;
@@ -485,7 +515,6 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
             return headers;
         });
     }
-
 
     public async removeInstance(id: string): Promise<void> {
         return await this.mutex.runExclusive(async () => {
@@ -503,6 +532,9 @@ export class DurableFunctionsWorkflowHistoryStore implements IWorkflowHistorySto
                     if (entity.ResultBlobName) {
                         let result = this.largeMessages.getBlockBlobClient(entity.ResultBlobName);
                         await result.deleteIfExists();
+                    }
+                    if (!entity.rowKey) {
+                        throw new Error("Expected row key to be set.");
                     }
                     await this.history.deleteEntity(id, entity.rowKey);
                 }

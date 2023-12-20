@@ -8,6 +8,6 @@ export declare type WorkflowResultType<W extends Workflow> = ReturnType<W> exten
 
 export interface BaseWorkflowHandle<T extends Workflow> {
     result(): Promise<WorkflowResultType<T>>;
-    store: IWorkflowHistoryStore;
+    store?: IWorkflowHistoryStore;
     readonly workflowId: string;
 }
