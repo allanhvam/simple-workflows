@@ -115,7 +115,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                         const retryPolicy = new DefaultRetryPolicy(options.retry);
                         result = await retryPolicy.retry(() => {
                             executions++;
-                            return f(...args);
+                            return f.bind(obj)(...args);
                         }, (e) => {
                             let message = `retry, execution #${executions} failed`;
                             if (e && typeof e === "object" && !e.stack && "toString" in e) {
@@ -133,7 +133,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                             }
                         });
                     } else {
-                        result = await f(...args).catch((ex) => {
+                        result = await f.bind(obj)(...args).catch((ex) => {
                             throw ex;
                         });
                     }
