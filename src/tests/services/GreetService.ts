@@ -1,4 +1,4 @@
-import { greet } from "./greet";
+import { greet } from "../activities/greet";
 
 export class GreetService {
     public prop = "prop";

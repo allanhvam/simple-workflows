@@ -24,6 +24,7 @@ import { sleep } from "../sleep";
 import { throwWorkflow } from "./workflows/throw-workflow";
 import superjson from "superjson";
 import { greetServiceWorkflow } from "./workflows/greet-service-workflow";
+import { stateServiceWorkflow } from "./workflows/state-service-workflow";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -95,6 +96,18 @@ void test("greet-service-workflow", async (t) => {
     assert.equal(instance.activities[0].args.length, 1);
     assert.deepEqual(instance.activities[0].args[0], "test");
     assert.equal(instance.activities[0].result, "Hello, test!");
+});
+
+void test("state-service-workflow", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    const handle = await worker.start(stateServiceWorkflow, { args: ["42"] });
+    const result = await handle.result();
+
+    // Assert
+    assert.equal(result, "42");
 });
 
 void test("test-workflow", async (t) => {
