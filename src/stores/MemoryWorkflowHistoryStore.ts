@@ -1,4 +1,4 @@
-import { isDeepStrictEqual } from "util";
+import { isDeepStrictEqual } from "node:util";
 import { type IWorkflowHistoryStore, type WorkflowInstance, type WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
 
 export class MemoryWorkflowHistoryStore implements IWorkflowHistoryStore {
