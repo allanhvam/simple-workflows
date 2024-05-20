@@ -1,4 +1,4 @@
-import { isDeepStrictEqual } from "util";
+import { isDeepStrictEqual } from "node:util";
 import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
 import { deserializeError, serializeError } from "./serialize-error";
 import { type WorkflowActivityInstance, type WorkflowInstance } from "./stores/IWorkflowHistoryStore";
