@@ -3,6 +3,7 @@ import assert from "node:assert";
 import { Worker } from "../Worker";
 import { testWorkflow } from "./workflows/test-workflow";
 import { DurableFunctionsWorkflowHistoryStore, MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores";
+import { sleep } from "../sleep";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -70,6 +71,7 @@ void test("Workflow store, getInstances options", async (t) => {
             store,
         });
         await handle.result();
+        await sleep("1ms");
     }
 
     // Act
