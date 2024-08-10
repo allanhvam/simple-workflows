@@ -1,6 +1,6 @@
 {
   "name": "simple-workflows",
-  "version": "0.1.0-beta15",
+  "version": "0.1.0-beta16",
   "description": "Workflows as code in TypeScript",
   "main": "lib/index.js",
   "engines": {

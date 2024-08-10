@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
 import { deserializeError, serializeError } from "./serialize-error";
-import { type WorkflowActivityInstance, type WorkflowInstance } from "./stores/IWorkflowHistoryStore";
+import type { WorkflowActivity, WorkflowInstance } from "./stores/IWorkflowHistoryStore";
 import { Worker } from "./Worker";
 
 type PromiseFuncKeys<T> = {
@@ -67,7 +67,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
                 const originalArgs = structuredClone(args);
 
-                const startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout" | undefined> => {
+                const startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivity | "timeout" | undefined> => {
                     const instance = await store?.getInstance(workflowId);
                     if (instance?.status === "timeout") {
                         return instance?.status;

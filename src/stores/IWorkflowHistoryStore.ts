@@ -11,10 +11,10 @@ export type WorkflowInstance = Omit<WorkflowInstanceHeader, "error"> & {
     result?: unknown
     error?: unknown
 
-    activities: Array<WorkflowActivityInstance>
+    activities: Array<WorkflowActivity>
 };
 
-export type WorkflowActivityInstance = {
+export type WorkflowActivity = {
     name: string
     args: Array<unknown>
     start: Date
@@ -23,11 +23,26 @@ export type WorkflowActivityInstance = {
     error?: unknown
 };
 
+export type GetInstancesOptions = {
+    continuationToken?: string
+    pageSize?: number
+    filter?: {
+        from?: Date
+        to?: Date
+    }
+};
+
+export type GetInstancesResult = Promise<{
+    instances: Array<WorkflowInstanceHeader>
+    continuationToken?: string
+}>;
+
 export interface IWorkflowHistoryStore {
-    getInstance: (id: string) => Promise<WorkflowInstance | undefined>
-    setInstance: (instance: WorkflowInstance) => Promise<void>
-    getInstances: () => Promise<Array<WorkflowInstance>>
-    getInstanceHeaders: () => Promise<Array<WorkflowInstanceHeader>>
-    removeInstance: (id: string) => Promise<void>
-    equal: (val1: any, val2: any) => boolean
+    getInstance: (id: string) => Promise<WorkflowInstance | undefined>;
+    setInstance: (instance: WorkflowInstance) => Promise<void>;
+    removeInstance: (id: string) => Promise<void>;
+
+    getInstances: (options?: GetInstancesOptions) => GetInstancesResult;
+
+    equal: (val1: any, val2: any) => boolean;
 }

@@ -1,4 +1,4 @@
-import type { WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
+import type { GetInstancesOptions, GetInstancesResult, WorkflowInstance } from "./IWorkflowHistoryStore";
 import { resolve, parse as pathParse } from "path";
 import { cwd } from "process";
 import * as fs from "node:fs";
@@ -92,7 +92,7 @@ export class FileSystemWorkflowHistoryStore extends SerializedWorkflowHistorySto
         });
     }
 
-    public getInstances = async (): Promise<Array<WorkflowInstance>> => {
+    public getInstances = async (options?: GetInstancesOptions): GetInstancesResult => {
         let files = fs.readdirSync(this.options.path);
         files = files.filter(file => fs.lstatSync(file).isFile());
 
@@ -106,20 +106,8 @@ export class FileSystemWorkflowHistoryStore extends SerializedWorkflowHistorySto
                 instances.push(instance);
             }
         }
-        return instances;
-    };
 
-    public getInstanceHeaders = async (): Promise<Array<WorkflowInstanceHeader>> => {
-        const instances = await this.getInstances();
-        return await Promise.resolve(instances.map(instance => {
-            return {
-                instanceId: instance.instanceId,
-                status: instance.status,
-                start: instance.start,
-                end: instance.end,
-                error: !!instance.error,
-            };
-        }));
+        return await this.getWorkflowInstanceHeaders(instances, options);
     };
 
     public removeInstance = async (id: string): Promise<void> => {
