@@ -1,5 +1,5 @@
-import { type IWorkflowContext } from "./IWorkflowContext";
-import { Worker } from "./Worker";
+import { type IWorkflowContext } from "./IWorkflowContext.js";
+import { Worker } from "./Worker.js";
 
 export class WorkflowContext {
     public static current(): IWorkflowContext | undefined {

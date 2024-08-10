@@ -1,8 +1,8 @@
-import type { WorkflowInstance, GetInstancesOptions, GetInstancesResult } from "./IWorkflowHistoryStore";
-import type { ISerializer } from "../ISerializer";
-import { DefaultSerializer } from "../DefaultSerializer";
+import type { WorkflowInstance, GetInstancesOptions, GetInstancesResult } from "./IWorkflowHistoryStore.js";
+import type { ISerializer } from "../ISerializer.js";
+import { DefaultSerializer } from "../DefaultSerializer.js";
 import { isDeepStrictEqual } from "node:util";
-import { WorkflowHistoryStore } from "./WorkflowHistoryStore";
+import { WorkflowHistoryStore } from "./WorkflowHistoryStore.js";
 
 export abstract class SerializedWorkflowHistoryStore extends WorkflowHistoryStore {
     protected readonly serializer: ISerializer;
@@ -16,9 +16,9 @@ export abstract class SerializedWorkflowHistoryStore extends WorkflowHistoryStor
         return (this.serializer.equal ?? isDeepStrictEqual)(val1, val2);
     };
 
-    abstract getInstance: (id: string) => Promise<WorkflowInstance | undefined>;
-    abstract setInstance: (instance: WorkflowInstance) => Promise<void>;
-    abstract removeInstance: (id: string) => Promise<void>;
+    abstract override getInstance: (id: string) => Promise<WorkflowInstance | undefined>;
+    abstract override setInstance: (instance: WorkflowInstance) => Promise<void>;
+    abstract override removeInstance: (id: string) => Promise<void>;
 
-    abstract getInstances: (options?: GetInstancesOptions) => GetInstancesResult;
+    abstract override getInstances: (options?: GetInstancesOptions) => GetInstancesResult;
 };

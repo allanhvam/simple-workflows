@@ -1,6 +1,6 @@
-import { Worker } from "../../Worker";
-import { WorkflowContext } from "../../WorkflowContext";
-import { sleep } from "../activities";
+import { Worker } from "../../Worker.js";
+import { WorkflowContext } from "../../WorkflowContext.js";
+import { sleep } from "../activities/index.js";
 
 async function childWorkflow(): Promise<void> {
     const id = WorkflowContext.current()?.workflowId;

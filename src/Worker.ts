@@ -1,12 +1,12 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { type IWorkflowContext } from "./IWorkflowContext";
-import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
-import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore";
-import { type BaseWorkflowHandle, type Workflow, type WorkflowResultType, type WorkflowReturnType } from "./Workflow";
+import { type IWorkflowContext } from "./IWorkflowContext.js";
+import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore.js";
+import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore.js";
+import { type BaseWorkflowHandle, type Workflow, type WorkflowResultType, type WorkflowReturnType } from "./Workflow.js";
 import msPkg from "ms";
 import { Mutex } from "async-mutex";
-import { sleep } from "./sleep";
-import { type IWorker, type WorkflowStartOptions } from "./IWorker";
+import { sleep } from "./sleep.js";
+import { type IWorker, type WorkflowStartOptions } from "./IWorker.js";
 import { nanoid } from "nanoid";
 
 export class Worker implements IWorker {

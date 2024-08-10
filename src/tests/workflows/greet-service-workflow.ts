@@ -1,5 +1,5 @@
-import { proxyActivities } from "../../proxyActivities";
-import { GreetService } from "../services/GreetService";
+import { proxyActivities } from "../../proxyActivities.js";
+import { GreetService } from "../services/GreetService.js";
 
 const greetService = proxyActivities(new GreetService());
 

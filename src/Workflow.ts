@@ -1,4 +1,4 @@
-import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
+import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore.js";
 
 export declare type WorkflowReturnType = Promise<any>;
 

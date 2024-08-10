@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { Worker } from "../Worker";
-import { testWorkflow } from "./workflows/test-workflow";
-import { DurableFunctionsWorkflowHistoryStore, MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores";
-import { sleep } from "../sleep";
+import { Worker } from "../Worker.js";
+import { testWorkflow } from "./workflows/test-workflow.js";
+import { DurableFunctionsWorkflowHistoryStore, MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores/index.js";
+import { sleep } from "../sleep.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();

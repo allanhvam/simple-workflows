@@ -1,4 +1,4 @@
-import type { IWorkflowHistoryStore, WorkflowInstance, GetInstancesOptions, GetInstancesResult, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
+import type { IWorkflowHistoryStore, WorkflowInstance, GetInstancesOptions, GetInstancesResult, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.js";
 
 export abstract class WorkflowHistoryStore implements IWorkflowHistoryStore {
     protected getWorkflowInstanceHeaders = async (instances: Array<WorkflowInstance>, options?: GetInstancesOptions): GetInstancesResult => {

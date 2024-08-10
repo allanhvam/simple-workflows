@@ -1,4 +1,4 @@
-import { type ISerializer } from "./ISerializer";
+import { type ISerializer } from "./ISerializer.js";
 
 /**
  * @internal

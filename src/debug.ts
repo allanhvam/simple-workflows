@@ -1,8 +1,8 @@
-import { Worker } from "./Worker";
-import { greetWorkflow } from "./tests/workflows/greet-workflow";
-import { FileSystemWorkflowHistoryStore } from "./stores/FileSystemWorkflowHistoryStore";
+import { Worker } from "./Worker.js";
+import { greetWorkflow } from "./tests/workflows/greet-workflow.js";
+import { FileSystemWorkflowHistoryStore } from "./stores/FileSystemWorkflowHistoryStore.js";
 
-let run = async () => {
+const run = async (): Promise<void> => {
     const worker = Worker.getInstance();
     worker.store = new FileSystemWorkflowHistoryStore();
 
@@ -14,7 +14,7 @@ let run = async () => {
     // Assert
     console.log(`Started workflow ${handle.workflowId}`);
 
-    let result = await handle.result();
+    const result = await handle.result();
     console.dir(result);
 };
 

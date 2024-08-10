@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
-import type { GetInstancesOptions, GetInstancesResult, WorkflowInstance } from "./IWorkflowHistoryStore";
-import { WorkflowHistoryStore } from "./WorkflowHistoryStore";
+import type { GetInstancesOptions, GetInstancesResult, WorkflowInstance } from "./IWorkflowHistoryStore.js";
+import { WorkflowHistoryStore } from "./WorkflowHistoryStore.js";
 
 export class MemoryWorkflowHistoryStore extends WorkflowHistoryStore {
     public workflowHistory: Array<WorkflowInstance> = [];

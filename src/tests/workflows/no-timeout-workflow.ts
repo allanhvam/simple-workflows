@@ -1,6 +1,6 @@
-import * as activities from "../activities";
-import { proxyActivities } from "../../proxyActivities";
-import { sleep } from "../../sleep";
+import * as activities from "../activities/index.js";
+import { proxyActivities } from "../../proxyActivities.js";
+import { sleep } from "../../sleep.js";
 
 const { incrementCounter } = proxyActivities(activities, {});
 
