@@ -13,7 +13,7 @@
   "scripts": {
     "build": "npx tsc",
     "build-watch": "npx tsc -w",
-    "test": "node --trace-warnings --test lib/tests/",
+    "test": "node --test",
     "lint": "eslint ./src/ --ext .ts"
   },
   "author": "Allan Hvam",
