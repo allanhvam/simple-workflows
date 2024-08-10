@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "azurite.azurite",
+        "connor4312.nodejs-testing",
+        "yoavbls.pretty-ts-errors"
+    ]
+}

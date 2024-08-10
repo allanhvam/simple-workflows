@@ -27,7 +27,7 @@ export interface IOptions {
 }
 
 export class NonError extends Error {
-    name = "NonError";
+    override name = "NonError";
 
     constructor(message) {
         super(NonError.prepareSuperMessage(message));

@@ -1,8 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
-import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
-import { deserializeError, serializeError } from "./serialize-error";
-import { type WorkflowActivityInstance, type WorkflowInstance } from "./stores/IWorkflowHistoryStore";
-import { Worker } from "./Worker";
+import { DefaultRetryPolicy } from "./DefaultRetryPolicy.js";
+import type { WorkflowActivity, WorkflowInstance } from "./stores/IWorkflowHistoryStore.js";
+import { Worker } from "./Worker.js";
 
 type PromiseFuncKeys<T> = {
     [K in keyof T]: T[K] extends ((...args: any[]) => Promise<any>) ? K : never;
@@ -57,7 +56,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 }
 
                 let activityName = String(activityType);
-                if (obj.constructor.name && obj.constructor.name !== "Object") {
+                if (obj.constructor?.name && obj.constructor?.name !== "Object") {
                     activityName = `${obj.constructor.name}.${activityType}`;
                 }
                 const logPrefix = `${workflowId}/${activityName}${logArgs}`;
@@ -67,7 +66,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
                 const originalArgs = structuredClone(args);
 
-                const startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivityInstance | "timeout" | undefined> => {
+                const startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivity | "timeout" | undefined> => {
                     const instance = await store?.getInstance(workflowId);
                     if (instance?.status === "timeout") {
                         return instance?.status;
@@ -103,7 +102,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                     return activity.result;
                 } else if (activity && Object.prototype.hasOwnProperty.call(activity, "error")) {
                     log(() => `${logPrefix}: skip (error)`);
-                    const reason = deserializeError(activity.error);
+                    const reason = activity.error;
                     return await Promise.reject(reason);
                 }
 
@@ -154,7 +153,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                     activity.end = new Date();
                     const duration = `${activity.end.getTime() - activity.start.getTime()} ms`;
                     if (error) {
-                        activity.error = serializeError(error);
+                        activity.error = error;
                         log(() => `${logPrefix}: end (error, ${executions > 1 ? `${executions} executions, ` : ""}${duration})`);
                     } else {
                         activity.result = result;

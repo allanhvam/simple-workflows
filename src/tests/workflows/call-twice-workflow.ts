@@ -1,5 +1,5 @@
-import * as activities from "../activities";
-import { proxyActivities } from "../../proxyActivities";
+import * as activities from "../activities/index.js";
+import { proxyActivities } from "../../proxyActivities.js";
 
 const { callTwice } = proxyActivities(activities, { retry: 5 });
 

@@ -1,5 +1,5 @@
-import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
-import { type BaseWorkflowHandle, type Workflow } from "./Workflow";
+import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore.js";
+import { type BaseWorkflowHandle, type Workflow } from "./Workflow.js";
 
 export declare type WithWorkflowArgs<W extends Workflow, T> = T & (Parameters<W> extends [any, ...any[]] ? {
     /**

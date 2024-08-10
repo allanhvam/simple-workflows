@@ -36,6 +36,7 @@ module.exports = {
         "@typescript-eslint/comma-dangle": ["error","always-multiline"],
         "@typescript-eslint/consistent-type-definitions": "off",
         "@typescript-eslint/no-unused-vars": "warn",
-        "@typescript-eslint/no-extraneous-class": "off"
+        "@typescript-eslint/no-extraneous-class": "off",
+        "@typescript-eslint/member-delimiter-style": "off"
     }
 }

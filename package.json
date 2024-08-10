@@ -1,8 +1,9 @@
 {
   "name": "simple-workflows",
-  "version": "0.1.0-beta15",
+  "version": "0.1.0-beta16",
   "description": "Workflows as code in TypeScript",
   "main": "lib/index.js",
+  "type": "module",
   "engines": {
     "node": ">=18.17.0"
   },
@@ -13,7 +14,7 @@
   "scripts": {
     "build": "npx tsc",
     "build-watch": "npx tsc -w",
-    "test": "node --trace-warnings --test lib/tests/",
+    "test": "node --test",
     "lint": "eslint ./src/ --ext .ts"
   },
   "author": "Allan Hvam",
@@ -27,13 +28,14 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-n": "^16.5.0",
     "eslint-plugin-promise": "^6.1.1",
-    "superjson": "^1.12.1",
+    "superjson": "^2.2.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "@azure/data-tables": "^13.0.1",
     "@azure/storage-blob": "^12.10.0",
     "async-mutex": "^0.4.0",
-    "ms": "^2.1.3"
+    "ms": "^2.1.3",
+    "nanoid": "^5.0.7"
   }
 }

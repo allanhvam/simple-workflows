@@ -1,5 +1,6 @@
-import { Worker } from "../../Worker";
-import { WorkflowContext } from "../../WorkflowContext";
+import { Worker } from "../../Worker.js";
+import { WorkflowContext } from "../../WorkflowContext.js";
+import { sleep } from "../activities/index.js";
 
 async function childWorkflow(): Promise<void> {
     const id = WorkflowContext.current()?.workflowId;
@@ -21,6 +22,12 @@ export async function nestedWorkflow(): Promise<void> {
         return await Promise.reject(new Error());
     }
 
-    const handle = await Worker.getInstance().start(childWorkflow, { workflowId: "child" });
+    await sleep("5ms");
+
+    const handle = await Worker.getInstance().start(childWorkflow, {
+        workflowId: "child",
+    });
     await handle.result();
+
+    await sleep("5ms");
 }

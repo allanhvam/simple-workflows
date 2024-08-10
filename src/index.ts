@@ -1,6 +1,6 @@
-export * from "./proxyActivities";
-export { Worker as WorkflowWorker } from "./Worker";
-export * from "./stores/";
-export * from "./IWorker";
-export * from "./WorkflowContext";
-export * from "./IWorkflowContext";
+export * from "./proxyActivities.js";
+export { Worker as WorkflowWorker } from "./Worker.js";
+export * from "./stores/index.js";
+export * from "./IWorker.js";
+export * from "./WorkflowContext.js";
+export * from "./IWorkflowContext.js";

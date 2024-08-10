@@ -1,13 +1,13 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { type IWorkflowContext } from "./IWorkflowContext";
-import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
-import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore";
-import { type BaseWorkflowHandle, type Workflow, type WorkflowResultType, type WorkflowReturnType } from "./Workflow";
+import { type IWorkflowContext } from "./IWorkflowContext.js";
+import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore.js";
+import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore.js";
+import { type BaseWorkflowHandle, type Workflow, type WorkflowResultType, type WorkflowReturnType } from "./Workflow.js";
 import msPkg from "ms";
-import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
-import { sleep } from "./sleep";
-import { type IWorker, type WorkflowStartOptions } from "./IWorker";
+import { sleep } from "./sleep.js";
+import { type IWorker, type WorkflowStartOptions } from "./IWorker.js";
+import { nanoid } from "nanoid";
 
 export class Worker implements IWorker {
     public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
@@ -29,7 +29,7 @@ export class Worker implements IWorker {
     }
 
     public async start<T extends Workflow>(workflow: T, options?: WorkflowStartOptions<T>): Promise<BaseWorkflowHandle<T>> {
-        let workflowId = "wf-id-" + Math.floor(Math.random() * 1000);
+        let workflowId = "workflow-" + nanoid();
         if (options?.workflowId) {
             workflowId = options.workflowId;
         }
@@ -79,7 +79,7 @@ export class Worker implements IWorker {
                 workflowId,
                 store,
                 result: async () => {
-                    const reason = deserializeError(error);
+                    const reason = error;
                     return await Promise.reject(reason);
                 },
             };
@@ -133,7 +133,7 @@ export class Worker implements IWorker {
                     workflowInstance.result = result;
                 } else {
                     workflowContext.log(() => `${workflowId}: end (error, ${duration})`);
-                    workflowInstance.error = serializeError(error);
+                    workflowInstance.error = error;
                 }
 
                 if (store) {

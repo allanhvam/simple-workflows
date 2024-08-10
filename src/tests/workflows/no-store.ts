@@ -1,4 +1,4 @@
-import { WorkflowContext } from "../../WorkflowContext";
+import { WorkflowContext } from "../../WorkflowContext.js";
 
 export async function noStore(): Promise<string> {
     const store = WorkflowContext.current()?.store;

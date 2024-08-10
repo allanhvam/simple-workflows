@@ -1,11 +1,11 @@
-import type { WorkflowActivityInstance, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore";
+import type { GetInstancesOptions, GetInstancesResult, WorkflowActivity, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.js";
 import { type GetTableEntityResponse, TableClient, type TableEntity, type TableEntityResult, TableServiceClient, TableTransaction } from "@azure/data-tables";
-import { deserializeError, serializeError } from "../serialize-error";
+import { deserializeError, serializeError } from "../serialize-error/index.js";
 import { BlobServiceClient, type ContainerClient } from "@azure/storage-blob";
 import zlib from "zlib";
 import { Mutex } from "async-mutex";
-import { type ISerializer } from "../ISerializer";
-import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore";
+import { type ISerializer } from "../ISerializer.js";
+import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore.js";
 
 interface IDurableFunctionsWorkflowHistory {
     Name: string
@@ -166,7 +166,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             args: [],
             start: entity.CreatedTime,
             end: entity.CompletedTime,
-            activities: new Array<WorkflowActivityInstance>(),
+            activities: new Array<WorkflowActivity>(),
         };
 
         if (entity.Input) {
@@ -450,65 +450,52 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
         });
     };
 
-    public getInstances = async (): Promise<WorkflowInstance[]> => {
+    public getInstances = async (options?: GetInstancesOptions): GetInstancesResult => {
         return await this.mutex.runExclusive(async () => {
             await this.init();
 
-            const instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowHistory>().byPage({ maxPageSize: 50 });
-
-            const workflows = new Array<WorkflowInstance>();
-            for await (const page of instancesIterator) {
-                for await (const entity of page) {
-                    const name = entity.Name;
-                    if (!name) {
-                        continue;
-                    }
-                    const instance = await this.getInstanceInternal(name);
-                    if (instance) {
-                        workflows.push(instance);
-                    }
-                }
+            const queryFilters = new Array<string>();
+            if (options?.filter?.from) {
+                queryFilters.push(`CreatedTime ge datetime'${options.filter.from.toISOString()}'`);
             }
 
-            return workflows;
-        });
-    };
-
-    public getInstanceHeaders = async (): Promise<Array<WorkflowInstanceHeader>> => {
-        return await this.mutex.runExclusive(async () => {
-            await this.init();
-
-            const instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowHistory>().byPage({ maxPageSize: 50 });
-
-            const headers = new Array<WorkflowInstanceHeader>();
-            for await (const page of instancesIterator) {
-                for await (const entity of page) {
-                    const id = entity.Name;
-                    try {
-                        const entity = await this.instances.getEntity<IDurableFunctionsWorkflowInstance>(id, "");
-
-                        const header: WorkflowInstanceHeader = {
-                            instanceId: id,
-                            status: entity.CustomStatus as any,
-                            start: entity.CreatedTime,
-                            end: entity.CompletedTime,
-                        };
-
-                        if (header.end && entity.Output && entity.RuntimeStatus === "Failed") {
-                            header.error = true;
-                        }
-
-                        headers.push(header);
-                    } catch (e) {
-                        if (typeof e === "object" && e && "statusCode" in e && e.statusCode === 404) {
-                            continue;
-                        }
-                        throw e;
-                    }
-                }
+            if (options?.filter?.to) {
+                queryFilters.push(`CreatedTime lt datetime'${options.filter.to.toISOString()}'`);
             }
 
-            return headers;
+            const instancesIterator = this.instances.listEntities<IDurableFunctionsWorkflowInstance>(
+                {
+                    queryOptions: {
+                        filter: queryFilters.join(" and "),
+                        select: ["Name", "CustomStatus", "CreatedTime", "CompletedTime"],
+                    },
+                },
+            ).byPage({
+                maxPageSize: options?.pageSize ?? 50, // max 1000
+                continuationToken: options?.continuationToken,
+            });
+
+            const instances = new Array<WorkflowInstanceHeader>();
+            let continuationToken: undefined | string;
+
+            for await (const page of instancesIterator) {
+                continuationToken = page.continuationToken;
+                for await (const instance of page) {
+                    const header: WorkflowInstanceHeader = {
+                        instanceId: instance.Name,
+                        status: instance.CustomStatus === "timeout" ? "timeout" : undefined,
+                        start: instance.CreatedTime,
+                        end: instance.CompletedTime,
+                    };
+
+                    instances.push(header);
+                }
+                break;
+            }
+            return {
+                instances,
+                continuationToken,
+            };
         });
     };
 
