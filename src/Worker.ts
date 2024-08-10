@@ -4,7 +4,6 @@ import { type IWorkflowHistoryStore } from "./stores/IWorkflowHistoryStore";
 import { MemoryWorkflowHistoryStore } from "./stores/MemoryWorkflowHistoryStore";
 import { type BaseWorkflowHandle, type Workflow, type WorkflowResultType, type WorkflowReturnType } from "./Workflow";
 import msPkg from "ms";
-import { deserializeError, serializeError } from "./serialize-error";
 import { Mutex } from "async-mutex";
 import { sleep } from "./sleep";
 import { type IWorker, type WorkflowStartOptions } from "./IWorker";
@@ -79,7 +78,7 @@ export class Worker implements IWorker {
                 workflowId,
                 store,
                 result: async () => {
-                    const reason = deserializeError(error);
+                    const reason = error;
                     return await Promise.reject(reason);
                 },
             };
@@ -133,7 +132,7 @@ export class Worker implements IWorker {
                     workflowInstance.result = result;
                 } else {
                     workflowContext.log(() => `${workflowId}: end (error, ${duration})`);
-                    workflowInstance.error = serializeError(error);
+                    workflowInstance.error = error;
                 }
 
                 if (store) {

@@ -1,6 +1,5 @@
 import { isDeepStrictEqual } from "node:util";
 import { DefaultRetryPolicy } from "./DefaultRetryPolicy";
-import { deserializeError, serializeError } from "./serialize-error";
 import type { WorkflowActivity, WorkflowInstance } from "./stores/IWorkflowHistoryStore";
 import { Worker } from "./Worker";
 
@@ -103,7 +102,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                     return activity.result;
                 } else if (activity && Object.prototype.hasOwnProperty.call(activity, "error")) {
                     log(() => `${logPrefix}: skip (error)`);
-                    const reason = deserializeError(activity.error);
+                    const reason = activity.error;
                     return await Promise.reject(reason);
                 }
 
@@ -154,7 +153,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                     activity.end = new Date();
                     const duration = `${activity.end.getTime() - activity.start.getTime()} ms`;
                     if (error) {
-                        activity.error = serializeError(error);
+                        activity.error = error;
                         log(() => `${logPrefix}: end (error, ${executions > 1 ? `${executions} executions, ` : ""}${duration})`);
                     } else {
                         activity.result = result;
