@@ -22,7 +22,11 @@ export async function nestedWorkflow(): Promise<void> {
         return await Promise.reject(new Error());
     }
 
-    const handle = await Worker.getInstance().start(childWorkflow, { workflowId: "child" });
+    await sleep("5ms");
+
+    const handle = await Worker.getInstance().start(childWorkflow, {
+        workflowId: "child",
+    });
     await handle.result();
 
     await sleep("5ms");
