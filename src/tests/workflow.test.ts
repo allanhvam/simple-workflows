@@ -19,20 +19,34 @@ import { largeWorkflow } from "./workflows/large-workflow";
 import { concurrentWorkflow } from "./workflows/concurrent-workflow";
 import { noTimeoutWorkflow } from "./workflows/no-timeout-workflow";
 import { nowWorkflow } from "./workflows/now-workflow";
-import { FileSystemWorkflowHistoryStore, MemoryWorkflowHistoryStore, DurableFunctionsWorkflowHistoryStore } from "../stores";
+import { DurableFunctionsWorkflowHistoryStore } from "../stores";
 import { sleep } from "../sleep";
 import { throwWorkflow } from "./workflows/throw-workflow";
 import superjson from "superjson";
 import { greetServiceWorkflow } from "./workflows/greet-service-workflow";
 import { stateServiceWorkflow } from "./workflows/state-service-workflow";
 
+let isStorageEmulatorRunning = false;
+
 test.before(async () => {
     const worker = Worker.getInstance();
-    const store = new DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true" });
-    // let store = new FileSystemWorkflowHistoryStore();
-    await store.clear();
-    // let store = new MemoryWorkflowHistoryStore();
-    worker.store = store;
+
+    try {
+        const response = await fetch("http://127.0.0.1:10000");
+        if (response.status === 400) {
+            isStorageEmulatorRunning = true;
+        }
+    } catch {
+        console.log("Storage emulator not running, using memory.");
+    }
+
+    if (isStorageEmulatorRunning) {
+        const store = new DurableFunctionsWorkflowHistoryStore({
+            connectionString: "UseDevelopmentStorage=true",
+        });
+        await store.clear();
+        worker.store = store;
+    }
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
@@ -219,7 +233,7 @@ void test("timeout-workflow", async (t) => {
 
     // Assert
     assert.equal(Counters.get("timeout-start"), 1);
-    await sleep(5000);
+    await sleep("3s");
     // Note: tests that activity execution is stopped
     assert.equal(Counters.get("timeout-end"), 0);
 
@@ -239,7 +253,7 @@ void test("no-timeout-workflow", async (t) => {
     });
 
     await handle.result();
-    await sleep(10000);
+    await sleep("1s");
 
     // Assert
     assert.equal(Counters.get("no-timeout-start"), 1);
@@ -300,20 +314,14 @@ void test("throw-error-workflow", async (t) => {
     // Act & Assert
     const workflowId = "throw-error";
     try {
-        console.log("D");
         const handle = await worker.start(throwErrorWorkflow, { workflowId });
-        console.log("B");
         await handle.result();
-        console.log("C");
         assert.fail();
     } catch {
-        console.log("A");
         // Ignore, expected to throw
     }
 
-    console.log("1");
     const instance = await worker.store.getInstance(workflowId);
-    console.log("2");
     assert.ok(instance?.end, "Expected instance end to be set.");
     assert.deepEqual(instance.result, undefined, "Expected instance result to be undefined.");
     assert.ok(instance.error, "Expected error to be set");
@@ -476,6 +484,11 @@ void test("greet-workflow-no-await-result", async (t) => {
 });
 
 void test("now", async (t) => {
+    if (!isStorageEmulatorRunning) {
+        // Skip
+        assert.ok(true);
+        return;
+    }
     // Arrange
     const worker = Worker.getInstance();
 

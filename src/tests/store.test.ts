@@ -1,17 +1,30 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import * as stores from "../stores";
 import { Worker } from "../Worker";
 import { testWorkflow } from "./workflows/test-workflow";
-import { MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores";
+import { DurableFunctionsWorkflowHistoryStore, MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores";
 
 test.before(async () => {
     const worker = Worker.getInstance();
-    const store = new stores.DurableFunctionsWorkflowHistoryStore({ connectionString: "UseDevelopmentStorage=true", taskHubName: "StoreTestWorkflow" });
-    // let store = new FileSystemWorkflowHistoryStore();
-    await store.clear();
-    // let store = new MemoryWorkflowHistoryStore();
-    worker.store = store;
+
+    let isStorageEmulatorRunning = false;
+    try {
+        const response = await fetch("http://127.0.0.1:10000");
+        if (response.status === 400) {
+            isStorageEmulatorRunning = true;
+        }
+    } catch {
+        console.log("Storage emulator not running, using memory.");
+    }
+
+    if (isStorageEmulatorRunning) {
+        const store = new DurableFunctionsWorkflowHistoryStore({
+            connectionString: "UseDevelopmentStorage=true",
+            taskHubName: "StoreTestWorkflow",
+        });
+        await store.clear();
+        worker.store = store;
+    }
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
