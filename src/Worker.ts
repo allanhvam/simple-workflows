@@ -7,6 +7,7 @@ import msPkg from "ms";
 import { Mutex } from "async-mutex";
 import { sleep } from "./sleep";
 import { type IWorker, type WorkflowStartOptions } from "./IWorker";
+import { nanoid } from "nanoid";
 
 export class Worker implements IWorker {
     public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
@@ -28,7 +29,7 @@ export class Worker implements IWorker {
     }
 
     public async start<T extends Workflow>(workflow: T, options?: WorkflowStartOptions<T>): Promise<BaseWorkflowHandle<T>> {
-        let workflowId = "wf-id-" + Math.floor(Math.random() * 1000);
+        let workflowId = "workflow-" + nanoid();
         if (options?.workflowId) {
             workflowId = options.workflowId;
         }
