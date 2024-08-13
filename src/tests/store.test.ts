@@ -4,6 +4,7 @@ import { Worker } from "../Worker.js";
 import { testWorkflow } from "./workflows/test-workflow.js";
 import { DurableFunctionsWorkflowHistoryStore, MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores/index.js";
 import { sleep } from "../sleep.js";
+import { throwErrorWorkflow } from "./workflows/throw-error-workflow.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -90,4 +91,27 @@ void test("Workflow store, getInstances options", async (t) => {
     assert.equal(half.instances.length, 50);
     assert.equal(thirty.instances.length, 30);
     assert.equal(all.length, 100);
+});
+
+
+void test("Workflow store, getInstances error", async (t) => {
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    let workflowId : string | undefined;
+    try {
+        const handle = await worker.start(throwErrorWorkflow);
+        workflowId = handle.workflowId;
+        await handle.result();
+        assert.fail();
+    } catch {
+        // Ignore, expected to throw
+    }
+
+    // Assert
+    const instances = await worker.store.getInstances();
+    const instance = instances.instances.find(wi => wi.instanceId === workflowId);
+    assert.ok(instance, "Expected instance to be found.");
+    assert.ok(instance.error, "Expected error to be true.");
 });

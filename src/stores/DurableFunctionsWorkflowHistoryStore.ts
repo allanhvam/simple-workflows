@@ -467,7 +467,13 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
                 {
                     queryOptions: {
                         filter: queryFilters.join(" and "),
-                        select: ["Name", "CustomStatus", "CreatedTime", "CompletedTime"],
+                        select: [
+                            "Name",
+                            "CustomStatus",
+                            "CreatedTime",
+                            "CompletedTime",
+                            "RuntimeStatus",
+                        ],
                     },
                 },
             ).byPage({
@@ -486,6 +492,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
                         status: instance.CustomStatus === "timeout" ? "timeout" : undefined,
                         start: instance.CreatedTime,
                         end: instance.CompletedTime,
+                        error: instance.RuntimeStatus === "Failed",
                     };
 
                     instances.push(header);
