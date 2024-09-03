@@ -1,5 +1,5 @@
-import { Worker } from "./Worker.js";
-import { greetWorkflow } from "./tests/workflows/greet-workflow.js";
+import { Worker } from "./worker/Worker.js";
+import { greetWorkflow } from "./tests/workflow-functions/greet-workflow.js";
 import { FileSystemWorkflowHistoryStore } from "./stores/FileSystemWorkflowHistoryStore.js";
 
 const run = async (): Promise<void> => {

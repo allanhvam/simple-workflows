@@ -2,11 +2,13 @@ import type { GetInstancesOptions, GetInstancesResult, WorkflowInstance } from "
 import { resolve, parse as pathParse } from "path";
 import { cwd } from "process";
 import * as fs from "node:fs";
-import { deserializeError, serializeError } from "../serialize-error/index.js";
-import { type ISerializer } from "../ISerializer.js";
+import { deserializeError, serializeError } from "../serialization/index.js";
+import { type ISerializer } from "../serialization/ISerializer.js";
 import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore.js";
 
 export class FileSystemWorkflowHistoryStore extends SerializedWorkflowHistoryStore {
+    public readonly name = "file-system";
+    
     public workflowHistory: Array<WorkflowInstance> = [];
     private readonly options: { path: string };
 
