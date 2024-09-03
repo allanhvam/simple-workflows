@@ -1,11 +1,12 @@
 import type { GetInstancesOptions, GetInstancesResult, WorkflowActivity, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.js";
 import { type GetTableEntityResponse, TableClient, type TableEntity, type TableEntityResult, TableServiceClient, TableTransaction } from "@azure/data-tables";
-import { deserializeError, serializeError } from "../serialize-error/index.js";
-import { BlobServiceClient, type ContainerClient } from "@azure/storage-blob";
+import { deserializeError, serializeError } from "../serialization/index.js";
+import { AnonymousCredential, BlobServiceClient, StorageSharedKeyCredential, type ContainerClient } from "@azure/storage-blob";
 import zlib from "zlib";
 import { Mutex } from "async-mutex";
-import { type ISerializer } from "../ISerializer.js";
+import { type ISerializer } from "../serialization/ISerializer.js";
 import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore.js";
+import { TokenCredential } from "@azure/core-auth";
 
 interface IDurableFunctionsWorkflowHistory {
     Name: string
@@ -36,25 +37,51 @@ interface IDurableFunctionsWorkflowInstance {
 }
 
 export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHistoryStore {
+    public readonly name = "durable-functions";
+
     private initialized?: boolean;
     private readonly history: TableClient;
     private readonly instances: TableClient;
     private readonly largeMessages: ContainerClient;
     private readonly mutex = new Mutex();
-    private readonly options: { connectionString: string, taskHubName: string };
+    public readonly options: {
+        connectionString?: string,
 
-    constructor(options: { connectionString: string, taskHubName?: string, serializer?: ISerializer }) {
+        tableUrl?: string;
+        blobUrl?: string;
+        credential?: TokenCredential;
+
+        taskHubName: string,
+    };
+
+    constructor(options: ({ connectionString: string } | { tableUrl: string, blobUrl: string, credential: TokenCredential }) & { taskHubName?: string, serializer?: ISerializer }) {
         super(options?.serializer);
         this.options = {
-            connectionString: options.connectionString,
             taskHubName: options.taskHubName ?? "Workflow",
         };
 
-        const { connectionString, taskHubName } = this.options;
-        this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`);
-        this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`);
+        if ("connectionString" in options) {
+            this.options.connectionString = options.connectionString;
 
-        const blobServicesClient = BlobServiceClient.fromConnectionString(connectionString);
+            const { connectionString, taskHubName } = this.options;
+            this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`);
+            this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`);
+
+            const blobServicesClient = BlobServiceClient.fromConnectionString(connectionString);
+            this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
+
+            return;
+        }
+
+        this.options.tableUrl = options.tableUrl;
+        this.options.blobUrl = options.blobUrl;
+        this.options.credential = options.credential;
+
+        const { tableUrl, blobUrl, credential, taskHubName } = this.options;
+        this.history = new TableClient(tableUrl, `${taskHubName}History`, credential);
+        this.instances = new TableClient(tableUrl, `${taskHubName}Instances`, credential);
+
+        const blobServicesClient = new BlobServiceClient(blobUrl, credential);
         this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
     }
 
@@ -102,13 +129,25 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
     }
 
     public async clear(): Promise<void> {
-        const tableServiceClient = TableServiceClient.fromConnectionString(this.options.connectionString);
-        await tableServiceClient.deleteTable(`${this.options.taskHubName}History`);
-        await tableServiceClient.deleteTable(`${this.options.taskHubName}Instances`);
+        if (this.options.connectionString) {
+            const tableServiceClient = TableServiceClient.fromConnectionString(this.options.connectionString);
+            await tableServiceClient.deleteTable(`${this.options.taskHubName}History`);
+            await tableServiceClient.deleteTable(`${this.options.taskHubName}Instances`);
 
-        const blobServicesClient = BlobServiceClient.fromConnectionString(this.options.connectionString);
-        const largeMessages = blobServicesClient.getContainerClient(`${this.options.taskHubName}-largemessages`.toLowerCase());
-        await largeMessages.deleteIfExists();
+            const blobServicesClient = BlobServiceClient.fromConnectionString(this.options.connectionString);
+            const largeMessages = blobServicesClient.getContainerClient(`${this.options.taskHubName}-largemessages`.toLowerCase());
+            await largeMessages.deleteIfExists();
+        }
+
+        if (this.options.tableUrl && this.options.blobUrl && this.options.credential) {
+            const tableServiceClient = new TableServiceClient(this.options.tableUrl, this.options.credential);
+            await tableServiceClient.deleteTable(`${this.options.taskHubName}History`);
+            await tableServiceClient.deleteTable(`${this.options.taskHubName}Instances`);
+
+            const blobServicesClient = new BlobServiceClient(this.options.blobUrl, this.options.credential);
+            const largeMessages = blobServicesClient.getContainerClient(`${this.options.taskHubName}-largemessages`.toLowerCase());
+            await largeMessages.deleteIfExists();
+        }
 
         this.initialized = false;
         await this.init();

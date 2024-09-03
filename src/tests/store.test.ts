@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { Worker } from "../Worker.js";
-import { testWorkflow } from "./workflows/test-workflow.js";
+import { Worker } from "../worker/Worker.js";
+import { testWorkflow } from "./workflow-functions/test-workflow.js";
 import { DurableFunctionsWorkflowHistoryStore, MemoryWorkflowHistoryStore, type WorkflowInstanceHeader } from "../stores/index.js";
 import { sleep } from "../sleep.js";
-import { throwErrorWorkflow } from "./workflows/throw-error-workflow.js";
+import { throwErrorWorkflow } from "./workflow-functions/throw-error-workflow.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -22,7 +22,7 @@ test.before(async () => {
     if (isStorageEmulatorRunning) {
         const store = new DurableFunctionsWorkflowHistoryStore({
             connectionString: "UseDevelopmentStorage=true",
-            taskHubName: "StoreTestWorkflow",
+            taskHubName: "Store",
         });
         await store.clear();
         worker.store = store;
