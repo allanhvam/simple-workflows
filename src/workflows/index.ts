@@ -2,12 +2,13 @@ import { Worker as WorkflowWorker } from "../worker/Worker.js";
 import { proxyActivities } from "../proxy/proxyActivities.js";
 import { OnlyAsync } from "../types/OnlyAsync.js";
 import { nanoid } from "nanoid";
+import { WorkflowHandle } from "../worker/WorkflowFunction.js";
 
 export type Trigger<P> = {
     name: string,
     options: any,
     description?: string,
-    start: (workflow: any, run: (id: string, triggerData: P) => Promise<void>) => void | Promise<void>;
+    start: (workflow: any, run: (id: string, triggerData: P) => Promise<WorkflowHandle<(triggerData: P) => any> | undefined>) => void | Promise<void>;
     stop?: (workflow: any) => void | Promise<void>;
 };
 
@@ -28,7 +29,7 @@ export const workflows = new Map<string, Workflow<any, any>>();
 export const workflow = <S extends Record<string, any>, P = void>(workflow: Workflow<S, P>) => {
     workflows.set(workflow.name, workflow);
 
-    const runInternal = (id: string) => (services: S) => async (triggerData: P) => {
+    const runInternal = async (id: string, services: S, triggerData: P): Promise<WorkflowHandle<(triggerData: P) => any>> => {
         // Proxy services
         const proxies = {} as any;
         Object.keys(services).forEach((key) => {
@@ -40,7 +41,7 @@ export const workflow = <S extends Record<string, any>, P = void>(workflow: Work
             workflowId: `${workflow.name} ${id}`,
             args: [triggerData],
         });
-        return handle.result();
+        return handle;
     }
 
     return {
@@ -52,18 +53,20 @@ export const workflow = <S extends Record<string, any>, P = void>(workflow: Work
                     worker.log?.(`Workflow '${workflow.name}' disabled, skip`);
                     return;
                 }
-                runInternal(id)(workflow.services)(payload);
+                return runInternal(id, workflow.services, payload);
             }
 
             await workflow.trigger.start(workflow, run);
         },
         // Run workflow
         run: (services: S) => async (triggerData: P) => {
-            return await runInternal(nanoid())(services)(triggerData);
+            const handle = await runInternal(nanoid(), services, triggerData);
+            return await handle.result();
         },
         // Invoke workflow with trigger data
         invoke: async (triggerData: P) => {
-            return await runInternal(nanoid())(workflow.services)(triggerData);
+            const handle = await runInternal(nanoid(), workflow.services, triggerData);
+            return await handle.result();
         },
     };
 };
