@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "async_hooks";
 import { type IWorkflowContext } from "./IWorkflowContext.js";
 import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
 import { MemoryWorkflowHistoryStore } from "../stores/MemoryWorkflowHistoryStore.js";
-import { type BaseWorkflowHandle, type WorkflowFunction, type WorkflowResultType, type WorkflowFunctionReturnType } from "./WorkflowFunction.js";
+import { type WorkflowHandle, type WorkflowFunction, type WorkflowResultType, type WorkflowFunctionReturnType } from "./WorkflowFunction.js";
 import msPkg from "ms";
 import { Mutex } from "async-mutex";
 import { sleep } from "../sleep.js";
@@ -28,7 +28,7 @@ export class Worker implements IWorker {
         return Worker.instance;
     }
 
-    public async start<T extends WorkflowFunction>(workflow: T, options?: WorkflowStartOptions<T>): Promise<BaseWorkflowHandle<T>> {
+    public async start<T extends WorkflowFunction>(workflow: T, options?: WorkflowStartOptions<T>): Promise<WorkflowHandle<T>> {
         let workflowId = "workflow-" + nanoid();
         if (options?.workflowId) {
             workflowId = options.workflowId;

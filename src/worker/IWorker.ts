@@ -1,5 +1,5 @@
 import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
-import { type BaseWorkflowHandle, type WorkflowFunction } from "./WorkflowFunction.js";
+import { type WorkflowHandle, type WorkflowFunction } from "./WorkflowFunction.js";
 
 export declare type WithWorkflowArgs<W extends WorkflowFunction, T> = T & (Parameters<W> extends [any, ...any[]] ? {
     /**
@@ -28,7 +28,7 @@ export declare type WorkflowOptions = {
 export declare type WorkflowStartOptions<T extends WorkflowFunction = WorkflowFunction> = WithWorkflowArgs<T, WorkflowOptions>;
 
 export interface IWorker {
-    start: <T extends WorkflowFunction>(workflow: T, options?: WorkflowStartOptions<T>) => Promise<BaseWorkflowHandle<T>>
+    start: <T extends WorkflowFunction>(workflow: T, options?: WorkflowStartOptions<T>) => Promise<WorkflowHandle<T>>
     store: IWorkflowHistoryStore
     log?: (s: string) => void
 }
