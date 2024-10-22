@@ -14,7 +14,7 @@ export type Trigger<P> = {
 
 export type Services<T> = { [P in keyof T]: OnlyAsync<T[P]> };
 
-export type Workflow<S extends Record<string, any>, P = void> = {
+export type Workflow<S extends Record<string, object>, P = void> = {
     name: string;
     description?: string;
     tags?: Array<string>;
@@ -26,7 +26,7 @@ export type Workflow<S extends Record<string, any>, P = void> = {
 
 export const workflows = new Map<string, Workflow<any, any>>();
 
-export const workflow = <S extends Record<string, any>, P = void>(workflow: Workflow<S, P>) => {
+export const workflow = <S extends Record<string, object>, P = void>(workflow: Workflow<S, P>) => {
     workflows.set(workflow.name, workflow);
 
     const runInternal = async (id: string, services: S, triggerData: P): Promise<WorkflowHandle<(triggerData: P) => any>> => {

@@ -6,3 +6,4 @@ ava.config.mjs
 tsconfig.json
 lib/tests/*
 lib/debug.js
+.eslint*
