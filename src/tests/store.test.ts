@@ -93,13 +93,12 @@ void test("Workflow store, getInstances options", async (t) => {
     assert.equal(all.length, 100);
 });
 
-
 void test("Workflow store, getInstances error", async (t) => {
     // Arrange
     const worker = Worker.getInstance();
 
     // Act
-    let workflowId : string | undefined;
+    let workflowId: string | undefined;
     try {
         const handle = await worker.start(throwErrorWorkflow);
         workflowId = handle.workflowId;

@@ -1,6 +1,5 @@
 import { manual } from "../../triggers/manual.js";
 import { workflow } from "../../workflows/index.js";
-import { add } from "../activities/add.js";
 import { MathService } from "../services/MathService.js";
 
 export const math = workflow({
@@ -13,4 +12,4 @@ export const math = workflow({
     run: (services) => async () => {
         return await services.math.add(1, 2);
     },
-})
+});

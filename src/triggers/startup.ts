@@ -5,12 +5,12 @@ export const startup = () => {
         name: "startup",
         options: undefined,
         description: "Trigger runs on application startup",
-        start: async (workflow: { name: string }, run) => {
+        start: async (_, run) => {
             const id = new Date().getTime().toString();
-            void run(id, undefined);
-            return Promise.resolve();
+            void run(id);
+            return await Promise.resolve();
         },
-        stop: (workflow: { name: string }) => {
+        stop: () => {
         },
     } satisfies Trigger<void>;
 };

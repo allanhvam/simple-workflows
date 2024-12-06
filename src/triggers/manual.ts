@@ -11,4 +11,4 @@ export const manual = () => {
             console.log(`manual: trigger stop for ${workflow.name}`);
         },
     } satisfies Trigger<void>;
-}
+};

@@ -10,4 +10,4 @@ export type WorkflowHandle<T extends WorkflowFunction> = {
     result: () => Promise<WorkflowResultType<T>>
     store?: IWorkflowHistoryStore
     readonly workflowId: string
-}
+};
