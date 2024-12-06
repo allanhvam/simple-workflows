@@ -41,12 +41,12 @@ void test("Workflow", async (t) => {
 
     // Assert
     assert.equal(result, 3);
-    assert.ok(workflows.has("math"));
+    assert.ok(workflows.has(workflow.name));
 
     const now = new Date();
     const from = new Date(now.getTime() - ms("2m"));
     const instances = await store.getInstances({ filter: { from, to: now } });
-    const mathInstances = instances.instances.filter(i => i.instanceId.indexOf("math ") === 0);
+    const mathInstances = instances.instances.filter(i => i.instanceId.indexOf(`${workflow.name} `) === 0);
 
     assert.ok(mathInstances.length >= 1);
 });

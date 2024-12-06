@@ -3,6 +3,7 @@ import assert from "node:assert";
 import { Worker } from "../worker/Worker.js";
 import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
 import { startup } from "./workflows/startup.js";
+import { sleep } from "../sleep.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -36,6 +37,7 @@ void test("startup trigger args", async (t) => {
 
     // Act
     await workflow.start();
+    await sleep("1s"); // Wait for trigger to fire
 
     // Assert
     const result = await store.getInstances();
