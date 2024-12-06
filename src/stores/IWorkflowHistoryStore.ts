@@ -39,7 +39,7 @@ export type GetInstancesResult = Promise<{
 
 export interface IWorkflowHistoryStore {
     name: string;
-    
+
     getInstance: (id: string) => Promise<WorkflowInstance | undefined>;
     setInstance: (instance: WorkflowInstance) => Promise<void>;
     removeInstance: (id: string) => Promise<void>;

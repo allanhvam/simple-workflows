@@ -8,7 +8,7 @@ import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore
 
 export class FileSystemWorkflowHistoryStore extends SerializedWorkflowHistoryStore {
     public readonly name = "file-system";
-    
+
     public workflowHistory: Array<WorkflowInstance> = [];
     private readonly options: { path: string };
 

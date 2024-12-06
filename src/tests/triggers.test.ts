@@ -2,9 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert";
 import { Worker } from "../worker/Worker.js";
 import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
-import { math } from "./workflows/math.js";
-import { workflows } from "../workflows/index.js";
-import ms from "ms";
+import { startup } from "./workflows/startup.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -30,23 +28,22 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("Workflow", async (t) => {
+void test("startup trigger args", async (t) => {
     // Arrange
-    const workflow = math;
+    const workflow = startup;
     const worker = Worker.getInstance();
     const store = worker.store;
 
     // Act
-    const result = await workflow.invoke();
+    await workflow.start();
 
     // Assert
-    assert.equal(result, 3);
-    assert.ok(workflows.has("math"));
+    const result = await store.getInstances();
+    const instanceHeader = result.instances.find(i => i.instanceId.startsWith(workflow.name));
+    assert.ok(instanceHeader);
 
-    const now = new Date();
-    const from = new Date(now.getTime() - ms("2m"));
-    const instances = await store.getInstances({ filter: { from, to: now } });
-    const mathInstances = instances.instances.filter(i => i.instanceId.indexOf("math ") === 0);
+    const instance = await store.getInstance(instanceHeader.instanceId);
 
-    assert.ok(mathInstances.length >= 1);
+    assert.ok(instance);
+    assert.deepEqual(instance?.args, [undefined]);
 });

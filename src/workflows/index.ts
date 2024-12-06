@@ -1,8 +1,8 @@
 import { Worker as WorkflowWorker } from "../worker/Worker.js";
 import { proxyActivities } from "../proxy/proxyActivities.js";
-import { OnlyAsync } from "../types/OnlyAsync.js";
+import { type OnlyAsync } from "../types/OnlyAsync.js";
 import { nanoid } from "nanoid";
-import { WorkflowHandle } from "../worker/WorkflowFunction.js";
+import { type WorkflowHandle } from "../worker/WorkflowFunction.js";
 
 export type Trigger<P> = {
     name: string,
@@ -20,7 +20,7 @@ export type Workflow<S extends Record<string, object>, P = void> = {
     tags?: Array<string>;
     disabled?: boolean;
     trigger: Trigger<P>;
-    services: S;
+    services?: S;
     run: (services: Services<S>) => (triggerData: P) => any;
 };
 
@@ -29,12 +29,14 @@ export const workflows = new Map<string, Workflow<any, any>>();
 export const workflow = <S extends Record<string, object>, P = void>(workflow: Workflow<S, P>) => {
     workflows.set(workflow.name, workflow);
 
-    const runInternal = async (id: string, services: S, triggerData: P): Promise<WorkflowHandle<(triggerData: P) => any>> => {
+    const runInternal = async (id: string, services: S | undefined, triggerData: P): Promise<WorkflowHandle<(triggerData: P) => any>> => {
         // Proxy services
         const proxies = {} as any;
-        Object.keys(services).forEach((key) => {
-            proxies[key] = proxyActivities(services[key], { retry: 5 });
-        });
+        if (services) {
+            Object.keys(services).forEach((key) => {
+                proxies[key] = proxyActivities(services[key], { retry: 5 });
+            });
+        }
 
         const worker = WorkflowWorker.getInstance();
         const handle = await worker.start(workflow.run(proxies), {
@@ -42,10 +44,15 @@ export const workflow = <S extends Record<string, object>, P = void>(workflow: W
             args: [triggerData],
         });
         return handle;
-    }
+    };
 
     return {
-        // Start the workflow trigger
+        name: workflow.name,
+        description: workflow.description,
+        tags: workflow.tags,
+        /**
+         * Start the workflow trigger
+         */
         start: async () => {
             const run = async (id: string, payload: any) => {
                 const worker = WorkflowWorker.getInstance();
@@ -53,17 +60,21 @@ export const workflow = <S extends Record<string, object>, P = void>(workflow: W
                     worker.log?.(`Workflow '${workflow.name}' disabled, skip`);
                     return;
                 }
-                return runInternal(id, workflow.services, payload);
-            }
+                return await runInternal(id, workflow.services, payload);
+            };
 
             await workflow.trigger.start(workflow, run);
         },
-        // Run workflow
+        /**
+         * Run workflow
+         */
         run: (services: S) => async (triggerData: P) => {
             const handle = await runInternal(nanoid(), services, triggerData);
             return await handle.result();
         },
-        // Invoke workflow with trigger data
+        /**
+         * Invoke workflow with trigger data
+         */
         invoke: async (triggerData: P) => {
             const handle = await runInternal(nanoid(), workflow.services, triggerData);
             return await handle.result();

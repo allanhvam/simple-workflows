@@ -1,12 +1,12 @@
 import type { GetInstancesOptions, GetInstancesResult, WorkflowActivity, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.js";
 import { type GetTableEntityResponse, TableClient, type TableEntity, type TableEntityResult, TableServiceClient, TableTransaction } from "@azure/data-tables";
 import { deserializeError, serializeError } from "../serialization/index.js";
-import { AnonymousCredential, BlobServiceClient, StorageSharedKeyCredential, type ContainerClient } from "@azure/storage-blob";
+import { BlobServiceClient, type ContainerClient } from "@azure/storage-blob";
 import zlib from "zlib";
 import { Mutex } from "async-mutex";
 import { type ISerializer } from "../serialization/ISerializer.js";
 import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore.js";
-import { TokenCredential } from "@azure/core-auth";
+import { type TokenCredential } from "@azure/core-auth";
 
 interface IDurableFunctionsWorkflowHistory {
     Name: string

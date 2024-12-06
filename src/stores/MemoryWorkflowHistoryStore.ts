@@ -4,7 +4,7 @@ import { WorkflowHistoryStore } from "./WorkflowHistoryStore.js";
 
 export class MemoryWorkflowHistoryStore extends WorkflowHistoryStore {
     public readonly name = "memory";
-    
+
     public workflowHistory: Array<WorkflowInstance> = [];
 
     public getInstance = async (id: string): Promise<WorkflowInstance | undefined> => {
