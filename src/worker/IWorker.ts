@@ -10,25 +10,25 @@ export declare type WithWorkflowArgs<W extends WorkflowFunction, T> = T & (Param
     /**
      * Arguments to pass to the Workflow
      */
-    args?: Parameters<W>
+    args?: Parameters<W>;
 });
 
 export declare type WorkflowOptions = {
-    workflowId?: string
+    workflowId?: string;
     /**
      * @format {@link https://www.npmjs.com/package/ms | ms} formatted string or number of milliseconds
      */
-    workflowExecutionTimeout?: string | number
+    workflowExecutionTimeout?: string | number;
     /**
      * Store for the workflow instance, overwrites the global instance (if set)
      */
-    store?: IWorkflowHistoryStore
+    store?: IWorkflowHistoryStore;
 };
 
 export declare type WorkflowStartOptions<T extends WorkflowFunction = WorkflowFunction> = WithWorkflowArgs<T, WorkflowOptions>;
 
 export interface IWorker {
-    start: <T extends WorkflowFunction>(workflow: T, options?: WorkflowStartOptions<T>) => Promise<WorkflowHandle<T>>
-    store: IWorkflowHistoryStore
-    log?: (s: string) => void
+    start: <T extends WorkflowFunction>(workflow: T, options?: WorkflowStartOptions<T>) => Promise<WorkflowHandle<T>>;
+    store: IWorkflowHistoryStore;
+    log?: (s: string) => void;
 }

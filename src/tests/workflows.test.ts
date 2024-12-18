@@ -5,6 +5,7 @@ import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
 import { math } from "./workflows/math.js";
 import { workflows } from "../workflows/index.js";
 import ms from "ms";
+import { addTow } from "./workflows/add-two.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -49,4 +50,15 @@ void test("Workflow", async (t) => {
     const mathInstances = instances.instances.filter(i => i.instanceId.indexOf(`${workflow.name} `) === 0);
 
     assert.ok(mathInstances.length >= 1);
+});
+
+void test("Workflow add-tow", async (t) => {
+    // Arrange
+    const workflow = addTow;
+
+    // Act
+    const result = await workflow.invoke(2) satisfies number;
+
+    // Assert
+    assert.equal(result, 4);
 });
