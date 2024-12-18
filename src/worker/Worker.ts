@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "async_hooks";
 import { type IWorkflowContext } from "./IWorkflowContext.js";
 import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
 import { MemoryWorkflowHistoryStore } from "../stores/MemoryWorkflowHistoryStore.js";
-import { type WorkflowHandle, type WorkflowFunction, type WorkflowResultType, type WorkflowFunctionReturnType } from "./WorkflowFunction.js";
+import { type WorkflowHandle, type WorkflowFunction, type WorkflowResultType } from "./WorkflowFunction.js";
 import msPkg from "ms";
 import { Mutex } from "async-mutex";
 import { sleep } from "../sleep.js";
@@ -96,7 +96,7 @@ export class Worker implements IWorker {
             await store?.setInstance(workflowInstance);
         }
 
-        let promise: WorkflowFunctionReturnType = Worker.asyncLocalStorage.run(workflowContext, async () => {
+        let promise = Worker.asyncLocalStorage.run(workflowContext, async () => {
             let result: any;
             let error: any;
             let isError = false;
