@@ -1,6 +1,6 @@
 {
   "name": "simple-workflows",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Workflows as code in TypeScript",
   "main": "lib/index.js",
   "type": "module",
