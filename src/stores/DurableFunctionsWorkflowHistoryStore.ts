@@ -209,7 +209,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
         };
 
         if (entity.Input) {
-            if (entity.Input.indexOf("http://") === 0) {
+            if (entity.Input.indexOf("http://") === 0 || entity.Input.indexOf("https://") === 0) {
                 instance.args = await getBlob(`${id}/Input.json.gz`);
             } else {
                 instance.args = this.serializer.parse(entity.Input);
@@ -272,7 +272,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
         if (instance.end) {
             let output: any;
             if (entity.Output) {
-                if (entity.Output.indexOf("http://") === 0) {
+                if (entity.Output.indexOf("http://") === 0 || entity.Output.indexOf("https://") === 0) {
                     output = await getBlob(`${id}/Output.json.gz`);
                 } else {
                     output = this.serializer.parse(entity.Output);
@@ -569,12 +569,12 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
                 }
             }
 
-            if (entity.Input && entity.Input.indexOf("http://") === 0) {
+            if (entity.Input && (entity.Input.indexOf("http://") === 0 || entity.Input.indexOf("https://") === 0)) {
                 const input = this.largeMessages.getBlockBlobClient(`${id}/Input.json.gz`);
                 await input.deleteIfExists();
             }
 
-            if (entity.Output && entity.Output.indexOf("http://") === 0) {
+            if (entity.Output && (entity.Output.indexOf("http://") === 0 || entity.Output.indexOf("https://") === 0)) {
                 const output = this.largeMessages.getBlockBlobClient(`${id}/Output.json.gz`);
                 await output.deleteIfExists();
             }
