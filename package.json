@@ -1,11 +1,11 @@
 {
   "name": "simple-workflows",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Workflows as code in TypeScript",
   "main": "lib/index.js",
   "type": "module",
   "engines": {
-    "node": ">=18.17.0"
+    "node": ">=18.19.0"
   },
   "repository": {
     "type": "git",
