@@ -8,6 +8,9 @@ import { Mutex } from "async-mutex";
 import { sleep } from "../sleep.js";
 import { type IWorker, type WorkflowStartOptions } from "./IWorker.js";
 import { nanoid } from "nanoid";
+import diagnostics_channel from "node:diagnostics_channel";
+
+const tracingChannel = diagnostics_channel.tracingChannel("simple-workflows");
 
 export class Worker implements IWorker {
     public static asyncLocalStorage = new AsyncLocalStorage<IWorkflowContext>();
@@ -34,6 +37,8 @@ export class Worker implements IWorker {
             workflowId = options.workflowId;
         }
 
+        tracingChannel.start.publish({ workflowId });
+
         const worker = Worker.getInstance();
         let store: IWorkflowHistoryStore | undefined = worker.store;
         if (options && Object.prototype.hasOwnProperty.call(options, "store")) {
@@ -57,12 +62,15 @@ export class Worker implements IWorker {
         let workflowInstance = await store?.getInstance(workflowId);
         if (workflowInstance?.status === "timeout") {
             workflowContext.log(() => `${workflowId}: skip (timeout)`);
-            return await Promise.reject(new Error(`Workflow ${workflowInstance.instanceId} timeout.`));
+            const error = new Error(`Workflow ${workflowInstance.instanceId} timeout.`);
+            tracingChannel.error.publish({ workflowId, error });
+            return await Promise.reject(error);
         }
 
         if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "result")) {
             workflowContext.log(() => `${workflowId}: skip (already executed)`);
             const result = workflowInstance.result;
+            tracingChannel.end.publish({ workflowId });
             return {
                 workflowId,
                 store,
@@ -75,6 +83,7 @@ export class Worker implements IWorker {
         if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "error")) {
             workflowContext.log(() => `${workflowId}: skip (error)`);
             const error = workflowInstance.error;
+            tracingChannel.error.publish({ workflowId, error });
             return {
                 workflowId,
                 store,
@@ -119,7 +128,8 @@ export class Worker implements IWorker {
                     const id = workflowInstance.instanceId;
                     workflowInstance = await store.getInstance(workflowInstance.instanceId);
                     if (!workflowInstance) {
-                        throw new Error(`Workflow '${id}' not found in store.`);
+                        const error = new Error(`Workflow '${id}' not found in store.`);
+                        throw error;
                     }
                     if (workflowInstance?.status === "timeout") {
                         return await Promise.reject(error);
@@ -179,17 +189,26 @@ export class Worker implements IWorker {
                 });
 
                 workflowContext.log(() => `${workflowId}: end (timeout)`);
-                return await Promise.reject(new Error(`Workflow ${workflowInstance?.instanceId} timeout.`));
+                const error = new Error(`Workflow ${workflowInstance?.instanceId} timeout.`);
+                return await Promise.reject(error);
             };
 
             promise = Promise.race([promise, timeout()]);
         }
 
+        tracingChannel.end.publish({ workflowId });
+
         return {
             workflowId,
             store,
             result: async () => {
-                return await promise;
+                tracingChannel.asyncStart.publish({ workflowId });
+                return await promise.catch(error => {
+                    tracingChannel.error.publish({ workflowId, error });
+                    throw error;
+                }).finally(() => {
+                    tracingChannel.asyncEnd.publish({ workflowId });
+                });
             },
         };
     }
