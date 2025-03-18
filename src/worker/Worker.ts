@@ -39,6 +39,18 @@ export class Worker implements IWorker {
 
         tracingChannel.start.publish({ workflowId });
 
+        let asyncEndCalled = false;
+        const asyncEndTracing = (error?: Error | any) => {
+            if (asyncEndCalled) {
+                return;
+            }
+            if (error) {
+                tracingChannel.error.publish({ workflowId, error });
+            }
+            tracingChannel.asyncEnd.publish({ workflowId });
+            asyncEndCalled = true;
+        };
+
         const worker = Worker.getInstance();
         let store: IWorkflowHistoryStore | undefined = worker.store;
         if (options && Object.prototype.hasOwnProperty.call(options, "store")) {
@@ -109,6 +121,9 @@ export class Worker implements IWorker {
             let result: any;
             let error: any;
             let isError = false;
+
+            tracingChannel.asyncStart.publish({ workflowId });
+
             try {
                 if (options?.args) {
                     result = await workflow(...options?.args);
@@ -120,6 +135,7 @@ export class Worker implements IWorker {
                 isError = true;
             }
 
+            // Save workflow result in store
             await workflowContext.mutex.runExclusive(async () => {
                 if (!workflowInstance) {
                     throw new Error("Expected workflow instance to be set.");
@@ -151,6 +167,8 @@ export class Worker implements IWorker {
                 }
             });
 
+            asyncEndTracing(error);
+
             if (isError) {
                 throw error;
             }
@@ -173,6 +191,7 @@ export class Worker implements IWorker {
                 }
 
                 if (workflowInstance?.end) {
+                    // If already ended
                     return;
                 }
 
@@ -190,6 +209,9 @@ export class Worker implements IWorker {
 
                 workflowContext.log(() => `${workflowId}: end (timeout)`);
                 const error = new Error(`Workflow ${workflowInstance?.instanceId} timeout.`);
+
+                asyncEndTracing(error);
+
                 return await Promise.reject(error);
             };
 
@@ -202,13 +224,7 @@ export class Worker implements IWorker {
             workflowId,
             store,
             result: async () => {
-                tracingChannel.asyncStart.publish({ workflowId });
-                return await promise.catch(error => {
-                    tracingChannel.error.publish({ workflowId, error });
-                    throw error;
-                }).finally(() => {
-                    tracingChannel.asyncEnd.publish({ workflowId });
-                });
+                return await promise;
             },
         };
     }
