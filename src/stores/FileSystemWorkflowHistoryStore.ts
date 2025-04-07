@@ -96,7 +96,7 @@ export class FileSystemWorkflowHistoryStore extends SerializedWorkflowHistorySto
 
     public getInstances = async (options?: GetInstancesOptions): GetInstancesResult => {
         let files = fs.readdirSync(this.options.path);
-        files = files.filter(file => fs.lstatSync(file).isFile());
+        files = files.filter(file => fs.lstatSync(resolve(this.options.path, file)).isFile());
 
         const instanceIds = files.map(file => pathParse(file).name);
 
