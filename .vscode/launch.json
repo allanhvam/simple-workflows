@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}\\lib\\debug.js",
+            "program": "${workspaceFolder}/lib/debug.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
