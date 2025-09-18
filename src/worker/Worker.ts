@@ -3,12 +3,12 @@ import { type IWorkflowContext } from "./IWorkflowContext.js";
 import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
 import { MemoryWorkflowHistoryStore } from "../stores/MemoryWorkflowHistoryStore.js";
 import { type WorkflowHandle, type WorkflowFunction, type WorkflowResultType } from "./WorkflowFunction.js";
-import msPkg from "ms";
 import { Mutex } from "async-mutex";
 import { sleep } from "../sleep.js";
 import { type IWorker, type WorkflowStartOptions } from "./IWorker.js";
 import { nanoid } from "nanoid";
 import diagnostics_channel from "node:diagnostics_channel";
+import { ms as msFunc } from "../ms.js";
 
 const tracingChannel = diagnostics_channel.tracingChannel("simple-workflows");
 
@@ -178,7 +178,7 @@ export class Worker implements IWorker {
         if (options?.workflowExecutionTimeout) {
             let ms: number;
             if (typeof options.workflowExecutionTimeout === "string") {
-                ms = msPkg(options.workflowExecutionTimeout);
+                ms = msFunc(options.workflowExecutionTimeout);
             } else {
                 ms = options.workflowExecutionTimeout;
             }

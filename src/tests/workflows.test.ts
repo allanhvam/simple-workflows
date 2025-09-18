@@ -4,8 +4,8 @@ import { Worker } from "../worker/Worker.js";
 import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
 import { math } from "./workflows/math.js";
 import { workflows } from "../workflows/index.js";
-import ms from "ms";
 import { addTow } from "./workflows/add-two.js";
+import { ms } from "../ms.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();

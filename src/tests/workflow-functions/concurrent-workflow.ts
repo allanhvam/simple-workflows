@@ -13,7 +13,18 @@ export async function concurrentWorkflow(): Promise<void> {
         }
     }
 
-    const array = ["1ms", "2ms", "3ms", "400ms", "5ms", "6ms", "7ms", "800ms", "9ms", "10ms"];
+    const array = [
+        "1ms" as const,
+        "2ms" as const,
+        "3ms" as const,
+        "400ms" as const,
+        "5ms" as const,
+        "6ms" as const,
+        "7ms" as const,
+        "800ms" as const,
+        "9ms" as const,
+        "10ms" as const,
+    ];
     shuffleArray(array);
 
     await Promise.all(array.map(async ms => await sleep(ms)));
