@@ -1,3 +1,4 @@
+import { type msStringValue } from "../ms.js";
 import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
 import { type WorkflowHandle, type WorkflowFunction } from "./WorkflowFunction.js";
 
@@ -16,9 +17,9 @@ export declare type WithWorkflowArgs<W extends WorkflowFunction, T> = T & (Param
 export declare type WorkflowOptions = {
     workflowId?: string;
     /**
-     * @format {@link https://www.npmjs.com/package/ms | ms} formatted string or number of milliseconds
+     * @format Formatted string (ms, s, m and h) or number of milliseconds
      */
-    workflowExecutionTimeout?: string | number;
+    workflowExecutionTimeout?: msStringValue | number;
     /**
      * Store for the workflow instance, overwrites the global instance (if set)
      */

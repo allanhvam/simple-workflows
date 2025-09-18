@@ -1,12 +1,13 @@
-import msPkg from "ms";
+import type { msStringValue } from "./ms.js";
+import { ms as msFunc } from "./ms.js";
 
 /**
  * @internal
  */
-export async function sleep(ms: number | string): Promise<void> {
+export async function sleep(ms: number | msStringValue): Promise<void> {
     let timeout: number;
     if (typeof ms === "string") {
-        timeout = msPkg(ms);
+        timeout = msFunc(ms);
     } else {
         timeout = ms;
     }

@@ -4,7 +4,8 @@ import { FileSystemWorkflowHistoryStore } from "./stores/FileSystemWorkflowHisto
 
 const run = async (): Promise<void> => {
     const worker = Worker.getInstance();
-    worker.store = new FileSystemWorkflowHistoryStore();
+    const store = new FileSystemWorkflowHistoryStore();
+    worker.store = store;
 
     const handle = await worker.start(greetWorkflow, {
         args: ["debug"],
@@ -16,6 +17,18 @@ const run = async (): Promise<void> => {
 
     const result = await handle.result();
     console.dir(result);
+
+    let instances = await store.getInstances();
+    while (instances.instances.length !== 0) {
+        for (let i = 0; i !== instances.instances.length; i++) {
+            const instance = instances.instances[i];
+            await store.removeInstance(instance.instanceId);
+        }
+        if (!instances.continuationToken) {
+            break;
+        }
+        instances = await store.getInstances({ continuationToken: instances.continuationToken });
+    }
 };
 
 run().then(() => {
