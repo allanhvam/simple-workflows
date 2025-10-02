@@ -31,10 +31,17 @@ export type Workflow<S extends Record<string, object>, P = void, O = unknown> = 
     run: (services: Services<S>) => (triggerData: P) => Promise<O>;
 };
 
-export const workflows = new Map<string, Workflow<any, any>>();
+type WorkflowsMapValue =
+    Omit<Workflow<any, any>, "trigger"> &
+    Required<Pick<Workflow<any, any>, "trigger">>;
+
+export const workflows = new Map<string, WorkflowsMapValue>();
 
 export const workflow = <S extends Record<string, object>, P = void, O = unknown>(workflow: Workflow<S, P, O>) => {
-    workflows.set(workflow.name, workflow);
+    if (!workflow.trigger) {
+        workflow.trigger = manual();
+    }
+    workflows.set(workflow.name, workflow as WorkflowsMapValue);
 
     const runInternal = async (id: string, services: S | undefined, triggerData: P) => {
         // Proxy services
@@ -80,11 +87,8 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
                 return await runInternal(id, workflow.services, payload);
             };
 
-            if (!workflow.trigger) {
-                workflow.trigger = manual();
-            }
-
-            await workflow.trigger.start(workflow, run);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            await workflow.trigger!.start(workflow, run);
         },
         /**
          * Run workflow
