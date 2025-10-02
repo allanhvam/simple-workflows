@@ -4,7 +4,7 @@ import { Worker } from "../worker/Worker.js";
 import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
 import { math } from "./workflows/math.js";
 import { workflows } from "../workflows/index.js";
-import { addTow } from "./workflows/add-two.js";
+import { addTwo } from "./workflows/add-two.js";
 import { ms } from "../ms.js";
 
 test.before(async () => {
@@ -52,9 +52,9 @@ void test("Workflow", async (t) => {
     assert.ok(mathInstances.length >= 1);
 });
 
-void test("Workflow add-tow", async (t) => {
+void test("Workflow add-two", async (t) => {
     // Arrange
-    const workflow = addTow;
+    const workflow = addTwo;
 
     // Act
     const result = await workflow.invoke(2) satisfies number;

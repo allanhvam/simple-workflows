@@ -3,6 +3,8 @@ import { proxyActivities } from "../proxy/proxyActivities.js";
 import { type OnlyAsync } from "../types/OnlyAsync.js";
 import { nanoid } from "nanoid";
 import { type WorkflowHandle } from "../worker/WorkflowFunction.js";
+import { manual } from "../triggers/manual.js";
+import type { WorkflowOptions } from "../worker/IWorker.js";
 
 // P: Payload
 // O: Output
@@ -21,8 +23,11 @@ export type Workflow<S extends Record<string, object>, P = void, O = unknown> = 
     description?: string;
     tags?: Array<string>;
     disabled?: boolean;
-    trigger: Trigger<P>;
+    // Default trigger is manual
+    trigger?: Trigger<P>;
     services?: S;
+    store?: WorkflowOptions["store"];
+    executionTimeout?: WorkflowOptions["workflowExecutionTimeout"];
     run: (services: Services<S>) => (triggerData: P) => Promise<O>;
 };
 
@@ -41,11 +46,20 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
         }
 
         const worker = WorkflowWorker.getInstance();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        const handle = await worker.start(workflow.run(proxies), {
+
+        type Options = Parameters<typeof worker.start>[1];
+        const options: Options = {
             workflowId: `${workflow.name} ${id}`,
             args: [triggerData],
-        });
+        };
+        if (Object.prototype.hasOwnProperty.call(workflow, "store")) {
+            options.store = workflow.store;
+        }
+        if (workflow.executionTimeout) {
+            options.workflowExecutionTimeout = workflow.executionTimeout;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        const handle = await worker.start(workflow.run(proxies), options as any);
         return handle;
     };
 
@@ -66,6 +80,10 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
                 return await runInternal(id, workflow.services, payload);
             };
 
+            if (!workflow.trigger) {
+                workflow.trigger = manual();
+            }
+
             await workflow.trigger.start(workflow, run);
         },
         /**
@@ -76,7 +94,7 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
             return await handle.result();
         },
         /**
-         * Invoke workflow with trigger data
+         * Invoke workflow with trigger data, returns the result
          */
         invoke: async (triggerData: P) => {
             const handle = await runInternal(nanoid(), workflow.services, triggerData);
