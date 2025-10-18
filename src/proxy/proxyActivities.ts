@@ -15,7 +15,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
 
                 const context = Worker.asyncLocalStorage.getStore();
                 if (!context) {
-                    throw new Error("Workflow executed outside workflow context.");
+                    throw new Error("simple-workflows: Workflow executed outside workflow context.");
                 }
                 const { workflowId, store, log, mutex } = context;
 
@@ -59,7 +59,17 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 log(() => `${logPrefix}: start`);
 
                 // NOTE: if object is passed, make sure we have a copy of it, if it is changed later
-                const originalArgs = structuredClone(args);
+                let originalArgs = new Array<any>();
+                try {
+                    originalArgs = structuredClone(args);
+                } catch (e) {
+                    if (e && typeof e === "object" && 
+                        "name" in e && e.name === "DataCloneError" &&
+                        "message" in e) {
+                        throw new Error(`simple-workflows: Failed to clone argument for workflow '${workflowId}/${activityName}' - all arguments must be cloneable (${e.message})`);
+                    }
+                    throw e;
+                }
 
                 const startActivity = await mutex.runExclusive(async (): Promise<WorkflowActivity | "timeout" | undefined> => {
                     const instance = await store?.getInstance(workflowId);
