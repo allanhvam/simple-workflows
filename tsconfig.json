@@ -23,6 +23,7 @@
         "noImplicitOverride": true,
 
         "outDir": "lib",
+        "erasableSyntaxOnly": true,
     },
     "include": [
         "src/**/*"

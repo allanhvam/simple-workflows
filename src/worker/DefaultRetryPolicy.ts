@@ -5,8 +5,10 @@ import { sleep } from "../sleep.js";
  * @internal
  */
 export class DefaultRetryPolicy implements IRetryPolicy {
-    constructor(private readonly retries: number) {
+    private readonly retries: number;
 
+    constructor(retries: number) {
+        this.retries = retries;
     }
 
     public async retry<T>(f: () => Promise<T>, onError?: (e) => void): Promise<T> {

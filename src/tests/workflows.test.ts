@@ -31,7 +31,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("Workflow", async (t) => {
+void test("Workflow", async () => {
     // Arrange
     const workflow = math;
     const worker = Worker.getInstance();
@@ -52,7 +52,7 @@ void test("Workflow", async (t) => {
     assert.ok(mathInstances.length >= 1);
 });
 
-void test("Workflow add-two", async (t) => {
+void test("Workflow add-two", async () => {
     // Arrange
     const workflow = addTwo;
 

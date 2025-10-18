@@ -65,7 +65,6 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
         if (workflow.executionTimeout) {
             options.workflowExecutionTimeout = workflow.executionTimeout;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const handle = await worker.start(workflow.run(proxies), options as any);
         return handle;
     };
@@ -87,7 +86,6 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
                 return await runInternal(id, workflow.services, payload);
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await workflow.trigger!.start(workflow, run);
         },
         /**

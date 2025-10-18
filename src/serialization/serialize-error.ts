@@ -66,7 +66,6 @@ const toJsonWasCalled = Symbol(".toJSON was called");
 const toJSON = (from): any => {
     from[toJsonWasCalled] = true;
     const json = from.toJSON();
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete from[toJsonWasCalled];
     return json;
 };
@@ -78,7 +77,6 @@ const destroyCircular = <ErrorType extends object>({
     forceEnumerable,
     maxDepth,
     depth,
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 }: { from: ErrorType, seen: Array<any>, to_?: any, forceEnumerable?: boolean, maxDepth: number, depth: number }) => {
     const to = to_ || (Array.isArray(from) ? [] : {});
 
@@ -88,7 +86,6 @@ const destroyCircular = <ErrorType extends object>({
         return to;
     }
 
-    // eslint-disable-next-line @typescript-eslint/dot-notation
     if (typeof from["toJSON"] === "function" && from[toJsonWasCalled] !== true) {
         return toJSON(from);
     }
