@@ -126,7 +126,7 @@ export class Worker implements IWorker {
 
             try {
                 if (options?.args) {
-                    result = await workflow(...options?.args);
+                    result = await workflow(...options.args);
                 } else {
                     result = await workflow();
                 }

@@ -51,7 +51,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("greet-workflow, test", async (t) => {
+void test("greet-workflow, test", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -92,7 +92,7 @@ void test("greet-workflow, undefined", async () => {
     assert.deepEqual(instance.activities[0].args[0], null);
 });
 
-void test("greet-service-workflow", async (t) => {
+void test("greet-service-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -113,7 +113,7 @@ void test("greet-service-workflow", async (t) => {
     assert.equal(instance.activities[0].result, "Hello, test!");
 });
 
-void test("state-service-workflow", async (t) => {
+void test("state-service-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -125,7 +125,7 @@ void test("state-service-workflow", async (t) => {
     assert.equal(result, "42");
 });
 
-void test("test-workflow", async (t) => {
+void test("test-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -145,7 +145,7 @@ void test("test-workflow", async (t) => {
     assert.equal(instance.activities[0].result, "test-42");
 });
 
-void test("increment-counter-workflow", async (t) => {
+void test("increment-counter-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -157,7 +157,7 @@ void test("increment-counter-workflow", async (t) => {
     assert.equal(result, 1);
 });
 
-void test("add-workflow", async (t) => {
+void test("add-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -178,7 +178,7 @@ void test("add-workflow", async (t) => {
     assert.equal(instance.activities[0].result, 3);
 });
 
-void test("add-workflow args", async (t) => {
+void test("add-workflow args", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -203,7 +203,7 @@ void test("add-workflow args", async (t) => {
     assert.equal(instance.activities[0].result, 7);
 });
 
-void test("void-workflow", async (t) => {
+void test("void-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -218,7 +218,7 @@ void test("void-workflow", async (t) => {
     assert.equal(Counters.get("void"), 1);
 });
 
-void test("timeout-workflow", async (t) => {
+void test("timeout-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -243,7 +243,7 @@ void test("timeout-workflow", async (t) => {
     assert.equal(instance.status, "timeout");
 });
 
-void test("no-timeout-workflow", async (t) => {
+void test("no-timeout-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -265,7 +265,7 @@ void test("no-timeout-workflow", async (t) => {
     assert.notEqual(instance.status, "timeout");
 });
 
-void test("distance-workflow", async (t) => {
+void test("distance-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -289,7 +289,7 @@ void test("distance-workflow", async (t) => {
     assert.equal(instance.activities[1].result, 1);
 });
 
-void test("move-workflow", async (t) => {
+void test("move-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -308,7 +308,7 @@ void test("move-workflow", async (t) => {
     assert.deepEqual(instance.activities[1].args[0], { x: 0, y: 1 });
 });
 
-void test("throw-error-workflow", async (t) => {
+void test("throw-error-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -341,7 +341,7 @@ void test("throw-error-workflow", async (t) => {
     assert.ok(activity.end instanceof Date);
 });
 
-void test("throw-workflow", async (t) => {
+void test("throw-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -364,7 +364,7 @@ void test("throw-workflow", async (t) => {
     assert.equal(instance.error, "Message 1");
 });
 
-void test("call-twice-workflow", async (t) => {
+void test("call-twice-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -376,7 +376,7 @@ void test("call-twice-workflow", async (t) => {
     assert.equal(result, "ok");
 });
 
-void test("no-store", async (t) => {
+void test("no-store", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -391,7 +391,7 @@ void test("no-store", async (t) => {
     assert.ok(!instance);
 });
 
-void test("nested-workflow", async (t) => {
+void test("nested-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -414,7 +414,7 @@ void test("nested-workflow", async (t) => {
     assert.ok(parent.end > child.end);
 });
 
-void test("long-workflow", async (t) => {
+void test("long-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -429,9 +429,9 @@ void test("long-workflow", async (t) => {
     assert.equal(large.activities.length, 125);
 });
 
-void test("large-workflow", async (t) => {
+void test("large-workflow", async () => {
     // Arrange
-    const long = Array.from(Array(100000).keys()).map(i => "A").join("");
+    const long = Array.from(Array(100000).keys()).map(() => "A").join("");
     const worker = Worker.getInstance();
 
     // Act
@@ -451,7 +451,7 @@ void test("large-workflow", async (t) => {
     assert.ok(result.length >= 10000);
 });
 
-void test("concurrent-workflow", async (t) => {
+void test("concurrent-workflow", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -468,7 +468,7 @@ void test("concurrent-workflow", async (t) => {
     assert.equal(instance.activities.length, 10);
 });
 
-void test("greet-workflow-no-await-result", async (t) => {
+void test("greet-workflow-no-await-result", async () => {
     // Arrange
     const worker = Worker.getInstance();
 
@@ -484,7 +484,7 @@ void test("greet-workflow-no-await-result", async (t) => {
     assert.equal(instance.result, "Hello, test no await!");
 });
 
-void test("now", async (t) => {
+void test("now", async () => {
     if (!isStorageEmulatorRunning) {
         // Skip
         assert.ok(true);

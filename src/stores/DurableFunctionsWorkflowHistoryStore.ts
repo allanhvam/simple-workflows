@@ -166,7 +166,6 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             return await new Promise((resolve, reject) => {
                 const chunks = new Array<Buffer>();
                 readableStream.on("data", (data) => {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     chunks.push(data instanceof Buffer ? data : Buffer.from(data));
                 });
                 readableStream.on("end", () => {

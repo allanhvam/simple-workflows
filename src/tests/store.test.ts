@@ -30,7 +30,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("Workflow store, removeInstance", async (t) => {
+void test("Workflow store, removeInstance", async () => {
     // Arrange
     const workflowId = "test-store";
     const worker = Worker.getInstance();
@@ -52,7 +52,7 @@ void test("Workflow store, removeInstance", async (t) => {
     assert.ok(!workflow);
 });
 
-void test("Workflow store, getInstances options", async (t) => {
+void test("Workflow store, getInstances options", async () => {
     // Arrange
     const worker = Worker.getInstance();
     const store = new MemoryWorkflowHistoryStore();
@@ -93,7 +93,7 @@ void test("Workflow store, getInstances options", async (t) => {
     assert.equal(all.length, 100);
 });
 
-void test("Workflow store, getInstances error", async (t) => {
+void test("Workflow store, getInstances error", async () => {
     // Arrange
     const worker = Worker.getInstance();
 

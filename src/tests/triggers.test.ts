@@ -29,7 +29,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("startup trigger args", async (t) => {
+void test("startup trigger args", async () => {
     // Arrange
     const workflow = startup;
     const worker = Worker.getInstance();

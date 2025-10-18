@@ -9,7 +9,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("Workflow local store", async (t) => {
+void test("Workflow local store", async () => {
     // Arrange
     const store = new MemoryWorkflowHistoryStore();
 
@@ -37,7 +37,7 @@ void test("Workflow local store", async (t) => {
     assert.ok(!instance, "Workflow instance should NOT be in global store");
 });
 
-void test("Workflow global store", async (t) => {
+void test("Workflow global store", async () => {
     // Arrange
     const w = workflow({
         name: "test-workflow-global-store",
@@ -56,7 +56,7 @@ void test("Workflow global store", async (t) => {
     assert.ok(instance, "Workflow instance should be in global store");
 });
 
-void test("Workflow undefined store", async (t) => {
+void test("Workflow undefined store", async () => {
     // Arrange
     const w = workflow({
         name: "test-workflow-undefined-store",

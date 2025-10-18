@@ -31,7 +31,7 @@ test.before(async () => {
     worker.log = (s: string) => console.log(`[${new Date().toISOString()}] ${s}`);
 });
 
-void test("diagnostics channel, error, await result", async (t) => {
+void test("diagnostics channel, error, await result", async () => {
     // Arrange
     type Message = (object & {
         error?: unknown;
@@ -87,7 +87,7 @@ void test("diagnostics channel, error, await result", async (t) => {
     assert.ok(errorMessage.error);
 });
 
-void test("diagnostics channel, start", async (t) => {
+void test("diagnostics channel, start", async () => {
     // Arrange
     type Message = (object & {
         error?: unknown;
