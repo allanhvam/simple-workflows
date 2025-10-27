@@ -313,7 +313,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             await this.init();
 
             const blobs = new Array<{ name: string, data?: string }>();
-            const error = Object.prototype.hasOwnProperty.call(instance, "error");
+            const error = Object.hasOwn(instance, "error");
             const task: TableEntity<IDurableFunctionsWorkflowInstance> = {
                 partitionKey: instance.instanceId,
                 rowKey: "",
@@ -392,7 +392,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
                 rows.push(row);
 
                 if (activity.end) {
-                    const error = Object.prototype.hasOwnProperty.call(activity, "error");
+                    const error = Object.hasOwn(activity, "error");
 
                     row = {
                         partitionKey: instance.instanceId,

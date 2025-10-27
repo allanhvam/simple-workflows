@@ -59,7 +59,7 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
             workflowId: `${workflow.name} ${id}`,
             args: [triggerData],
         };
-        if (Object.prototype.hasOwnProperty.call(workflow, "store")) {
+        if (Object.hasOwn(workflow, "store")) {
             options.store = workflow.store;
         }
         if (workflow.executionTimeout) {

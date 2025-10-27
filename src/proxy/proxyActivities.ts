@@ -66,7 +66,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                     if (e && typeof e === "object" && 
                         "name" in e && e.name === "DataCloneError" &&
                         "message" in e) {
-                        throw new Error(`simple-workflows: Failed to clone argument for workflow '${workflowId}/${activityName}' - all arguments must be cloneable (${e.message})`);
+                        throw new Error(`simple-workflows: Failed to clone argument for workflow '${workflowId}/${activityName}' - all arguments must be cloneable (${e.message})`, { cause: e });
                     }
                     throw e;
                 }
@@ -102,10 +102,10 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
                 }
 
                 let activity = startActivity;
-                if (activity && Object.prototype.hasOwnProperty.call(activity, "result")) {
+                if (activity && Object.hasOwn(activity, "result")) {
                     log(() => `${logPrefix}: skip (already executed)`);
                     return activity.result;
-                } else if (activity && Object.prototype.hasOwnProperty.call(activity, "error")) {
+                } else if (activity && Object.hasOwn(activity, "error")) {
                     log(() => `${logPrefix}: skip (error)`);
                     const reason = activity.error;
                     return await Promise.reject(reason);

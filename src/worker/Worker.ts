@@ -53,7 +53,7 @@ export class Worker implements IWorker {
 
         const worker = Worker.getInstance();
         let store: IWorkflowHistoryStore | undefined = worker.store;
-        if (options && Object.prototype.hasOwnProperty.call(options, "store")) {
+        if (options && Object.hasOwn(options, "store")) {
             store = options.store;
         }
 
@@ -79,7 +79,7 @@ export class Worker implements IWorker {
             return await Promise.reject(error);
         }
 
-        if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "result")) {
+        if (workflowInstance && Object.hasOwn(workflowInstance, "result")) {
             workflowContext.log(() => `${workflowId}: skip (already executed)`);
             const result = workflowInstance.result;
             tracingChannel.end.publish({ workflowId });
@@ -92,7 +92,7 @@ export class Worker implements IWorker {
             };
         }
 
-        if (workflowInstance && Object.prototype.hasOwnProperty.call(workflowInstance, "error")) {
+        if (workflowInstance && Object.hasOwn(workflowInstance, "error")) {
             workflowContext.log(() => `${workflowId}: skip (error)`);
             const error = workflowInstance.error;
             tracingChannel.error.publish({ workflowId, error });
