@@ -5,18 +5,26 @@ import { Worker } from "../worker/Worker.js";
 import type { OnlyAsync } from "../types/OnlyAsync.js";
 
 export function proxyActivities<A extends object>(activities: A, options?: { retry?: number }): OnlyAsync<A> {
+    if (!activities) {
+        throw new Error(`simple-workflows: Cannot create proxy with a non-object as target or handler`);
+    }
+
     return new Proxy(activities, {
         get(obj, activityType) {
             if (typeof activityType !== "string") {
                 throw new TypeError(`Only strings are supported for Activity types, got: ${String(activityType)}`);
             }
             return async (...args: any[]) => {
-                const f = activities[activityType];
-
                 const context = Worker.asyncLocalStorage.getStore();
                 if (!context) {
                     throw new Error("simple-workflows: Workflow executed outside workflow context.");
                 }
+
+                const f = activities[activityType];
+                if (!f) {
+                    throw new Error(`simple-workflows: ${typeof activities}.${activityType} is not a function`);
+                }
+
                 const { workflowId, store, log, mutex } = context;
 
                 const serializeArg = (arg: any): string | undefined => {
