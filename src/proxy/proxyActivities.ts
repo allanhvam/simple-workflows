@@ -22,7 +22,7 @@ export function proxyActivities<A extends object>(activities: A, options?: { ret
 
                 const f = activities[activityType];
                 if (!f) {
-                    throw new Error(`simple-workflows: ${typeof activities}.${activityType} is not a function`);
+                    throw new Error(`simple-workflows: ${(activities.constructor?.name ?? typeof activities)}.${activityType} is not a function`);
                 }
 
                 const { workflowId, store, log, mutex } = context;

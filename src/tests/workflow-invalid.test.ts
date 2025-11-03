@@ -56,7 +56,7 @@ void test("Workflow f undefined", async () => {
     } catch (e) {
         // Assert
         if (e && typeof e === "object" && "message" in e && typeof e.message === "string") {
-            assert.ok(e.message.includes("simple-workflows: object.add is not a function"));
+            assert.ok(e.message.includes("simple-workflows: Object.add is not a function"));
             return;
         }
         assert.fail();
