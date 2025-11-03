@@ -26,7 +26,6 @@ void test("Workflow throws", async () => {
     } catch (e) {
         if (e && typeof e === "object" && "message" in e && typeof e.message === "string") {
             assert.ok(e.message.includes("simple-workflows: Failed to clone argument for workflow"));
-            console.dir(e);
             return;
         }
         assert.fail();
