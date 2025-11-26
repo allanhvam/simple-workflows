@@ -60,12 +60,13 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             taskHubName: options.taskHubName ?? "Workflow",
         };
 
+        const tableServiceClientOptions = { retryOptions: { maxRetries: 5 }};
         if ("connectionString" in options) {
             this.options.connectionString = options.connectionString;
 
             const { connectionString, taskHubName } = this.options;
-            this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`);
-            this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`);
+            this.history = TableClient.fromConnectionString(connectionString, `${taskHubName}History`, tableServiceClientOptions);
+            this.instances = TableClient.fromConnectionString(connectionString, `${taskHubName}Instances`, tableServiceClientOptions);
 
             const blobServicesClient = BlobServiceClient.fromConnectionString(connectionString);
             this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
@@ -78,8 +79,8 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
         this.options.credential = options.credential;
 
         const { tableUrl, blobUrl, credential, taskHubName } = this.options;
-        this.history = new TableClient(tableUrl, `${taskHubName}History`, credential);
-        this.instances = new TableClient(tableUrl, `${taskHubName}Instances`, credential);
+        this.history = new TableClient(tableUrl, `${taskHubName}History`, credential, tableServiceClientOptions);
+        this.instances = new TableClient(tableUrl, `${taskHubName}Instances`, credential, tableServiceClientOptions);
 
         const blobServicesClient = new BlobServiceClient(blobUrl, credential);
         this.largeMessages = blobServicesClient.getContainerClient(`${taskHubName}-largemessages`.toLowerCase());
