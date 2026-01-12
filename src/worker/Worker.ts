@@ -57,30 +57,25 @@ export class Worker implements IWorker {
             store = options.store;
         }
 
-        const workflowContext: IWorkflowContext = {
-            workflowId,
-            store,
-            log: (f: () => string) => {
-                const log = worker.log;
-                if (log) {
-                    log(f());
-                }
-            },
-            mutex: new Mutex(),
+        const log = (f: () => string) => {
+            const log = worker.log;
+            if (log) {
+                log(f());
+            }
         };
 
-        workflowContext.log(() => `${workflowId}: start`);
+        log(() => `${workflowId}: start`);
 
         let workflowInstance = await store?.getInstance(workflowId);
         if (workflowInstance?.status === "timeout") {
-            workflowContext.log(() => `${workflowId}: skip (timeout)`);
+            log(() => `${workflowId}: skip (timeout)`);
             const error = new Error(`Workflow ${workflowInstance.instanceId} timeout.`);
             tracingChannel.error.publish({ workflowId, error });
             return await Promise.reject(error);
         }
 
         if (workflowInstance && Object.hasOwn(workflowInstance, "result")) {
-            workflowContext.log(() => `${workflowId}: skip (already executed)`);
+            log(() => `${workflowId}: skip (already executed)`);
             const result = workflowInstance.result;
             tracingChannel.end.publish({ workflowId });
             return {
@@ -93,7 +88,7 @@ export class Worker implements IWorker {
         }
 
         if (workflowInstance && Object.hasOwn(workflowInstance, "error")) {
-            workflowContext.log(() => `${workflowId}: skip (error)`);
+            log(() => `${workflowId}: skip (error)`);
             const error = workflowInstance.error;
             tracingChannel.error.publish({ workflowId, error });
             return {
@@ -116,6 +111,14 @@ export class Worker implements IWorker {
 
             await store?.setInstance(workflowInstance);
         }
+
+        const workflowContext: IWorkflowContext = {
+            workflowId,
+            start: workflowInstance.start,
+            store,
+            log,
+            mutex: new Mutex(),
+        };
 
         let promise = Worker.asyncLocalStorage.run(workflowContext, async () => {
             let result: any;
