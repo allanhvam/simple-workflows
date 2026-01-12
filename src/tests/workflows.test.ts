@@ -71,7 +71,7 @@ void test("Workflow start", async () => {
     const store = worker.store;
 
     // Act
-    const result = await workflow.invoke() satisfies ({ id: string | undefined, start: Date | undefined });
+    const result = await workflow.invoke() satisfies ({ id: string | undefined; start: Date | undefined });
 
     // Assert
     assert.ok(result);
@@ -80,5 +80,5 @@ void test("Workflow start", async () => {
     const instance = await store.getInstance(result.id);
     assert.ok(instance);
     assert.ok(instance.start);
-    assert.equal(result.start?.getTime(), instance.start.getTime());
+    assert.equal(result.start?.toString(), instance.start.toString());
 });

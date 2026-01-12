@@ -12,7 +12,7 @@ export class FileSystemWorkflowHistoryStore extends SerializedWorkflowHistorySto
     public workflowHistory: Array<WorkflowInstance> = [];
     private readonly options: { path: string };
 
-    public constructor(options?: { path?: string, serializer?: ISerializer }) {
+    public constructor(options?: { path?: string; serializer?: ISerializer }) {
         super(options?.serializer);
 
         this.options = {

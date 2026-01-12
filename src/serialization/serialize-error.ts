@@ -16,14 +16,14 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 export type JsonObject = { [Key in string]?: JsonValue };
 
 export type ErrorObject = {
-    name?: string
-    stack?: string
-    message?: string
-    code?: string
+    name?: string;
+    stack?: string;
+    message?: string;
+    code?: string;
 } & JsonObject;
 
 export interface IOptions {
-    readonly maxDepth?: number
+    readonly maxDepth?: number;
 }
 
 export class NonError extends Error {
@@ -77,7 +77,7 @@ const destroyCircular = <ErrorType extends object>({
     forceEnumerable,
     maxDepth,
     depth,
-}: { from: ErrorType, seen: Array<any>, to_?: any, forceEnumerable?: boolean, maxDepth: number, depth: number }) => {
+}: { from: ErrorType; seen: Array<any>; to_?: any; forceEnumerable?: boolean; maxDepth: number; depth: number }) => {
     const to = to_ || (Array.isArray(from) ? [] : {});
 
     seen.push(from);

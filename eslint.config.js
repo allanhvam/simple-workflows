@@ -1,5 +1,5 @@
 import js from "@eslint/js";
-import stylisticTs from "@stylistic/eslint-plugin";
+import stylistic from "@stylistic/eslint-plugin";
 import eslintConfigPrettier from "eslint-config-prettier";
 import onlyWarn from "eslint-plugin-only-warn";
 import tseslint from "typescript-eslint";
@@ -15,13 +15,18 @@ export const config = [
     ...tseslint.configs.recommended,
     {
         plugins: {
-            "@stylistic/ts": stylisticTs,
+            "@stylistic": stylistic,
         },
         rules: {
-            "@stylistic/ts/semi": ["error", "always"],
+            "@stylistic/semi": ["error", "always"],
             "@typescript-eslint/consistent-type-imports": "error",
-            "@stylistic/ts/comma-dangle": ["error", "always-multiline"],
+            "@stylistic/comma-dangle": ["error", "always-multiline"],
             "@typescript-eslint/no-explicit-any": "off",
+            "quotes": ["error", "double", {
+                avoidEscape: true,
+                allowTemplateLiterals: true,
+            }],
+            "@stylistic/member-delimiter-style": "error",
         },
     },
     {

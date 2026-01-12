@@ -9,31 +9,31 @@ import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore
 import { type TokenCredential } from "@azure/core-auth";
 
 interface IDurableFunctionsWorkflowHistory {
-    Name: string
-    Result?: string
-    ResultBlobName?: string
-    EventId: number
-    _Timestamp: Date
-    EventType: "TaskScheduled" | "TaskCompleted" | "TaskFailed" | "ExecutionStarted" | "ExecutionCompleted"
-    ExecutionId: string
-    TaskScheduledId?: number
-    Input?: string
-    InputBlobName?: string
+    Name: string;
+    Result?: string;
+    ResultBlobName?: string;
+    EventId: number;
+    _Timestamp: Date;
+    EventType: "TaskScheduled" | "TaskCompleted" | "TaskFailed" | "ExecutionStarted" | "ExecutionCompleted";
+    ExecutionId: string;
+    TaskScheduledId?: number;
+    Input?: string;
+    InputBlobName?: string;
 }
 
 // https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-instance-management?tabs=csharp#query-instances
 interface IDurableFunctionsWorkflowInstance {
-    Input: string
-    CreatedTime: Date
-    Name: string
-    Version: string
-    RuntimeStatus: "Pending" | "Running" | "Completed" | "ContinuedAsNew" | "Failed" | "Terminated"
-    LastUpdatedTime: Date
-    TaskHubName: string
-    CustomStatus?: string
-    ExecutionId: string
-    Output: string
-    CompletedTime?: Date
+    Input: string;
+    CreatedTime: Date;
+    Name: string;
+    Version: string;
+    RuntimeStatus: "Pending" | "Running" | "Completed" | "ContinuedAsNew" | "Failed" | "Terminated";
+    LastUpdatedTime: Date;
+    TaskHubName: string;
+    CustomStatus?: string;
+    ExecutionId: string;
+    Output: string;
+    CompletedTime?: Date;
 }
 
 export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHistoryStore {
@@ -45,16 +45,16 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
     private readonly largeMessages: ContainerClient;
     private readonly mutex = new Mutex();
     public readonly options: {
-        connectionString?: string,
+        connectionString?: string;
 
         tableUrl?: string;
         blobUrl?: string;
         credential?: TokenCredential;
 
-        taskHubName: string,
+        taskHubName: string;
     };
 
-    constructor(options: ({ connectionString: string } | { tableUrl: string, blobUrl: string, credential: TokenCredential }) & { taskHubName?: string, serializer?: ISerializer }) {
+    constructor(options: ({ connectionString: string } | { tableUrl: string; blobUrl: string; credential: TokenCredential }) & { taskHubName?: string; serializer?: ISerializer }) {
         super(options?.serializer);
         this.options = {
             taskHubName: options.taskHubName ?? "Workflow",
@@ -301,7 +301,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
                 }
                 return false;
             };
-            const isLargeHistory = (row: { Input?: string, Result?: string }): boolean => {
+            const isLargeHistory = (row: { Input?: string; Result?: string }): boolean => {
                 if (isLarge(row.Input)) {
                     return true;
                 }
@@ -313,7 +313,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
 
             await this.init();
 
-            const blobs = new Array<{ name: string, data?: string }>();
+            const blobs = new Array<{ name: string; data?: string }>();
             const error = Object.hasOwn(instance, "error");
             const task: TableEntity<IDurableFunctionsWorkflowInstance> = {
                 partitionKey: instance.instanceId,
@@ -370,7 +370,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             for (let i = 0; i !== instance.activities.length; i++) {
                 const activity = instance.activities[i];
 
-                let row: IDurableFunctionsWorkflowHistory & { partitionKey: string, rowKey: string } = {
+                let row: IDurableFunctionsWorkflowHistory & { partitionKey: string; rowKey: string } = {
                     partitionKey: instance.instanceId,
                     rowKey: this.toHex(rowKey++, 16),
                     Name: activity.name,
@@ -421,7 +421,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             }
 
             if (instance.end) {
-                const row: IDurableFunctionsWorkflowHistory & { partitionKey: string, rowKey: string } = {
+                const row: IDurableFunctionsWorkflowHistory & { partitionKey: string; rowKey: string } = {
                     partitionKey: instance.instanceId,
                     rowKey: this.toHex(rowKey++, 16),
                     Name: instance.instanceId,

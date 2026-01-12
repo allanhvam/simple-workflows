@@ -1,3 +1,3 @@
 export interface IRetryPolicy {
-    retry: <T>(f: () => Promise<T>) => Promise<T>
+    retry: <T>(f: () => Promise<T>) => Promise<T>;
 }
