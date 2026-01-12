@@ -6,7 +6,7 @@ export declare type WithWorkflowArgs<W extends WorkflowFunction, T> = T & (Param
     /**
      * Arguments to pass to the Workflow
      */
-    args: Parameters<W>
+    args: Parameters<W>;
 } : {
     /**
      * Arguments to pass to the Workflow

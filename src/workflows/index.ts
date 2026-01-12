@@ -9,9 +9,9 @@ import type { WorkflowOptions } from "../worker/IWorker.js";
 // P: Payload
 // O: Output
 export type Trigger<P, O = unknown> = {
-    name: string,
-    options: any,
-    description?: string,
+    name: string;
+    options: any;
+    description?: string;
     start: (workflow: any, run: (id: string, triggerData: P) => Promise<WorkflowHandle<(triggerData: P) => Promise<O>> | undefined>) => void | Promise<void>;
     stop?: (workflow: any) => void | Promise<void>;
 };

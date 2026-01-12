@@ -1,40 +1,40 @@
 export type WorkflowInstanceHeader = {
-    instanceId: string
-    status?: "timeout"
-    start: Date
-    end?: Date
-    error?: boolean
+    instanceId: string;
+    status?: "timeout";
+    start: Date;
+    end?: Date;
+    error?: boolean;
 };
 
 export type WorkflowInstance = Omit<WorkflowInstanceHeader, "error"> & {
-    args: Array<unknown>
-    result?: unknown
-    error?: unknown
+    args: Array<unknown>;
+    result?: unknown;
+    error?: unknown;
 
-    activities: Array<WorkflowActivity>
+    activities: Array<WorkflowActivity>;
 };
 
 export type WorkflowActivity = {
-    name: string
-    args: Array<unknown>
-    start: Date
-    end?: Date
-    result?: unknown
-    error?: unknown
+    name: string;
+    args: Array<unknown>;
+    start: Date;
+    end?: Date;
+    result?: unknown;
+    error?: unknown;
 };
 
 export type GetInstancesOptions = {
-    continuationToken?: string
-    pageSize?: number
+    continuationToken?: string;
+    pageSize?: number;
     filter?: {
-        from?: Date
-        to?: Date
-    }
+        from?: Date;
+        to?: Date;
+    };
 };
 
 export type GetInstancesResult = Promise<{
-    instances: Array<WorkflowInstanceHeader>
-    continuationToken?: string
+    instances: Array<WorkflowInstanceHeader>;
+    continuationToken?: string;
 }>;
 
 export interface IWorkflowHistoryStore {
