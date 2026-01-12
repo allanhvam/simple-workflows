@@ -25,6 +25,7 @@ import { throwWorkflow } from "./workflow-functions/throw-workflow.js";
 import superjson from "superjson";
 import { greetServiceWorkflow } from "./workflow-functions/greet-service-workflow.js";
 import { stateServiceWorkflow } from "./workflow-functions/state-service-workflow.js";
+import * as devalue from "devalue";
 
 let isStorageEmulatorRunning = false;
 
@@ -484,7 +485,7 @@ void test("greet-workflow-no-await-result", async () => {
     assert.equal(instance.result, "Hello, test no await!");
 });
 
-void test("now", async () => {
+void test("now superjson", async () => {
     if (!isStorageEmulatorRunning) {
         // Skip
         assert.ok(true);
@@ -498,6 +499,33 @@ void test("now", async () => {
         store: new DurableFunctionsWorkflowHistoryStore({
             connectionString: "UseDevelopmentStorage=true",
             serializer: superjson,
+        }),
+    });
+
+    const result = await handle.result();
+
+    const instance = await handle.store?.getInstance(handle.workflowId);
+
+    // Assert
+    assert.ok(result instanceof Date, "Expected result to be Date");
+    assert.ok(instance);
+    assert.ok(instance.result instanceof Date, "Expected result to be Date");
+});
+
+void test("now devalue", async () => {
+    if (!isStorageEmulatorRunning) {
+        // Skip
+        assert.ok(true);
+        return;
+    }
+    // Arrange
+    const worker = Worker.getInstance();
+
+    // Act
+    const handle = await worker.start(nowWorkflow, {
+        store: new DurableFunctionsWorkflowHistoryStore({
+            connectionString: "UseDevelopmentStorage=true",
+            serializer: devalue,
         }),
     });
 
