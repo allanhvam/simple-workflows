@@ -17,6 +17,7 @@ jobs:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
       - run: sudo npm install -g npm@latest
+      - run: npm --version
       - name: Install dependencies and build 🔧
         run: npm ci && npm run build
       - name: Publish package on NPM 📦
