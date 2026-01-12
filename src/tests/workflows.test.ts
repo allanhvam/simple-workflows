@@ -6,6 +6,7 @@ import { math } from "./workflows/math.js";
 import { workflows } from "../workflows/index.js";
 import { addTwo } from "./workflows/add-two.js";
 import { ms } from "../ms.js";
+import { start } from "./workflows/start.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -61,4 +62,23 @@ void test("Workflow add-two", async () => {
 
     // Assert
     assert.equal(result, 4);
+});
+
+void test("Workflow start", async () => {
+    // Arrange
+    const workflow = start;
+    const worker = Worker.getInstance();
+    const store = worker.store;
+
+    // Act
+    const result = await workflow.invoke() satisfies ({ id: string | undefined, start: Date | undefined });
+
+    // Assert
+    assert.ok(result);
+    assert.ok(result.id);
+
+    const instance = await store.getInstance(result.id);
+    assert.ok(instance);
+    assert.ok(instance.start);
+    assert.equal(result.start?.getTime(), instance.start.getTime());
 });
