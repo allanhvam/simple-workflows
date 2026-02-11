@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { type WorkflowHandle } from "../worker/WorkflowFunction.js";
 import { manual } from "../triggers/manual.js";
 import type { WorkflowOptions } from "../worker/IWorker.js";
+import type { PublicPart } from "../types/PublicPart.js";
 
 // P: Payload
 // O: Output
@@ -43,7 +44,9 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
     }
     workflows.set(workflow.name, workflow as WorkflowsMapValue);
 
-    const runInternal = async (id: string, services: S | undefined, triggerData: P) => {
+    type PublicServices = { [K in keyof S]: PublicPart<S[K]> };
+
+    const runInternal = async (id: string, services: PublicServices | undefined, triggerData: P) => {
         // Proxy services
         const proxies = {} as any;
         if (services) {
@@ -91,7 +94,7 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
         /**
          * Run workflow
          */
-        run: (services: S) => async (triggerData: P) => {
+        run: (services: PublicServices) => async (triggerData: P) => {
             const handle = await runInternal(nanoid(), services, triggerData);
             return await handle.result();
         },

@@ -8,6 +8,7 @@ import { addTwo } from "./workflows/add-two.js";
 import { ms } from "../ms.js";
 import { start } from "./workflows/start.js";
 import { promiseLike } from "./workflows/promise-like.js";
+import { publicPart } from "./workflows/public-part.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -92,6 +93,29 @@ void test("Workflow promise-like", async () => {
 
     // Act
     const result = await workflow.invoke();
+
+    // Assert
+    assert.ok(result);
+    assert.ok(result.id);
+    assert.equal(result.result, 3);
+
+    const instance = await store.getInstance(result.id);
+    assert.ok(instance);
+});
+
+void test("Workflow public-part", async () => {
+    // Arrange
+    const worker = Worker.getInstance();
+    const store = worker.store;
+
+    // Act, NOTE: math does not have private member z
+    const result = await publicPart.run({
+      math: {
+        add: async (x: number, y: number) => {
+          return Promise.resolve(x + y);
+        },
+      },
+    })();
 
     // Assert
     assert.ok(result);
