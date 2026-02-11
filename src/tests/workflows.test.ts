@@ -7,6 +7,7 @@ import { workflows } from "../workflows/index.js";
 import { addTwo } from "./workflows/add-two.js";
 import { ms } from "../ms.js";
 import { start } from "./workflows/start.js";
+import { promiseLike } from "./workflows/promise-like.js";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -81,4 +82,22 @@ void test("Workflow start", async () => {
     assert.ok(instance);
     assert.ok(instance.start);
     assert.equal(result.start?.toString(), instance.start.toString());
+});
+
+void test("Workflow promise-like", async () => {
+    // Arrange
+    const workflow = promiseLike;
+    const worker = Worker.getInstance();
+    const store = worker.store;
+
+    // Act
+    const result = await workflow.invoke();
+
+    // Assert
+    assert.ok(result);
+    assert.ok(result.id);
+    assert.equal(result.result, 3);
+
+    const instance = await store.getInstance(result.id);
+    assert.ok(instance);
 });
