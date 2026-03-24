@@ -1,6 +1,6 @@
-import { type msStringValue } from "../ms.js";
-import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
-import { type WorkflowHandle, type WorkflowFunction } from "./WorkflowFunction.js";
+import type { msStringValue } from "../ms.ts";
+import type { IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.ts";
+import type { WorkflowHandle, WorkflowFunction } from "./WorkflowFunction.ts";
 
 export declare type WithWorkflowArgs<W extends WorkflowFunction, T> = T & (Parameters<W> extends [any, ...any[]] ? {
     /**

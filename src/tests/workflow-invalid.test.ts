@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { Worker } from "../worker/Worker.js";
-import { MemoryWorkflowHistoryStore } from "../stores/index.js";
-import { workflow } from "../workflows/index.js";
+import { Worker } from "../worker/Worker.ts";
+import { MemoryWorkflowHistoryStore } from "../stores/index.ts";
+import { workflow } from "../workflows/index.ts";
 
 test.before(async () => {
     const worker = Worker.getInstance();

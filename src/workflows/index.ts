@@ -1,11 +1,11 @@
-import { Worker as WorkflowWorker } from "../worker/Worker.js";
-import { proxyActivities } from "../proxy/proxyActivities.js";
-import { type OnlyAsync } from "../types/OnlyAsync.js";
+import { Worker as WorkflowWorker } from "../worker/Worker.ts";
+import { proxyActivities } from "../proxy/proxyActivities.ts";
+import type { OnlyAsync } from "../types/OnlyAsync.ts";
 import { nanoid } from "nanoid";
-import { type WorkflowHandle } from "../worker/WorkflowFunction.js";
-import { manual } from "../triggers/manual.js";
-import type { WorkflowOptions } from "../worker/IWorker.js";
-import type { PublicPart } from "../types/PublicPart.js";
+import type { WorkflowHandle } from "../worker/WorkflowFunction.ts";
+import { manual } from "../triggers/manual.ts";
+import type { WorkflowOptions } from "../worker/IWorker.ts";
+import type { PublicPart } from "../types/PublicPart.ts";
 
 // P: Payload
 // O: Output

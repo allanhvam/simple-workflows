@@ -1,6 +1,6 @@
-import { Worker } from "./worker/Worker.js";
-import { greetWorkflow } from "./tests/workflow-functions/greet-workflow.js";
-import { FileSystemWorkflowHistoryStore } from "./stores/FileSystemWorkflowHistoryStore.js";
+import { Worker } from "./worker/Worker.ts";
+import { greetWorkflow } from "./tests/workflow-functions/greet-workflow.ts";
+import { FileSystemWorkflowHistoryStore } from "./stores/FileSystemWorkflowHistoryStore.ts";
 
 const run = async (): Promise<void> => {
     const worker = Worker.getInstance();

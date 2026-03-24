@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { workflow } from "../workflows/index.js";
+import { workflow } from "../workflows/index.ts";
 
 void test("Workflow throws", async () => {
     // Arrange

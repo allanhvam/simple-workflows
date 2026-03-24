@@ -1,5 +1,5 @@
-import type { msStringValue } from "./ms.js";
-import { ms as msFunc } from "./ms.js";
+import type { msStringValue } from "./ms.ts";
+import { ms as msFunc } from "./ms.ts";
 
 /**
  * @internal

@@ -1,4 +1,4 @@
-import { type Trigger } from "../../index.js";
+import type { Trigger } from "../../index.ts";
 
 export const math = () => {
     return {

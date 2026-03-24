@@ -25,6 +25,8 @@
         "outDir": "lib",
         "erasableSyntaxOnly": true,
         "rootDir": "./src",
+        "rewriteRelativeImportExtensions": true,
+        "verbatimModuleSyntax": true
     },
     "include": [
         "src/**/*"

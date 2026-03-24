@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { Worker } from "../../worker/Worker.js";
-import { DurableFunctionsWorkflowHistoryStore } from "../../stores/index.js";
-import { throwErrorWorkflow } from "../workflow-functions/throw-error-workflow.js";
+import { Worker } from "../../worker/Worker.ts";
+import { DurableFunctionsWorkflowHistoryStore } from "../../stores/index.ts";
+import { throwErrorWorkflow } from "../workflow-functions/throw-error-workflow.ts";
 import diagnostics_channel from "node:diagnostics_channel";
-import { sleep } from "../../sleep.js";
-import { addWorkflow } from "../workflow-functions/add-workflow.js";
+import { sleep } from "../../sleep.ts";
+import { addWorkflow } from "../workflow-functions/add-workflow.ts";
 
 test.before(async () => {
     const worker = Worker.getInstance();

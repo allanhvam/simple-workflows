@@ -1,4 +1,4 @@
-import { type ISerializer } from "./ISerializer.js";
+import type { ISerializer } from "./ISerializer.ts";
 
 export class DefaultSerializer implements ISerializer {
     stringify(o: any): string {

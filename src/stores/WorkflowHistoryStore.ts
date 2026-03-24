@@ -1,4 +1,4 @@
-import type { IWorkflowHistoryStore, WorkflowInstance, GetInstancesOptions, GetInstancesResult, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.js";
+import type { IWorkflowHistoryStore, WorkflowInstance, GetInstancesOptions, GetInstancesResult, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.ts";
 
 export abstract class WorkflowHistoryStore implements IWorkflowHistoryStore {
     abstract name: string;

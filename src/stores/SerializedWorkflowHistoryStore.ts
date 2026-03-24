@@ -1,8 +1,8 @@
-import type { WorkflowInstance, GetInstancesOptions, GetInstancesResult } from "./IWorkflowHistoryStore.js";
-import type { ISerializer } from "../serialization/ISerializer.js";
-import { DefaultSerializer } from "../serialization/DefaultSerializer.js";
+import type { WorkflowInstance, GetInstancesOptions, GetInstancesResult } from "./IWorkflowHistoryStore.ts";
+import type { ISerializer } from "../serialization/ISerializer.ts";
+import { DefaultSerializer } from "../serialization/DefaultSerializer.ts";
 import { isDeepStrictEqual } from "node:util";
-import { WorkflowHistoryStore } from "./WorkflowHistoryStore.js";
+import { WorkflowHistoryStore } from "./WorkflowHistoryStore.ts";
 
 export abstract class SerializedWorkflowHistoryStore extends WorkflowHistoryStore {
     public readonly serializer: ISerializer;

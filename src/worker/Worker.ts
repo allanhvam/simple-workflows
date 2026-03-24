@@ -1,14 +1,14 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { type IWorkflowContext } from "./IWorkflowContext.js";
-import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
-import { MemoryWorkflowHistoryStore } from "../stores/MemoryWorkflowHistoryStore.js";
-import { type WorkflowHandle, type WorkflowFunction, type WorkflowResultType } from "./WorkflowFunction.js";
+import type { IWorkflowContext } from "./IWorkflowContext.ts";
+import type { IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.ts";
+import { MemoryWorkflowHistoryStore } from "../stores/MemoryWorkflowHistoryStore.ts";
+import type { WorkflowHandle, WorkflowFunction, WorkflowResultType } from "./WorkflowFunction.ts";
 import { Mutex } from "async-mutex";
-import { sleep } from "../sleep.js";
-import { type IWorker, type WorkflowStartOptions } from "./IWorker.js";
+import { sleep } from "../sleep.ts";
+import type { IWorker, WorkflowStartOptions } from "./IWorker.ts";
 import { nanoid } from "nanoid";
 import diagnostics_channel from "node:diagnostics_channel";
-import { ms as msFunc } from "../ms.js";
+import { ms as msFunc } from "../ms.ts";
 
 const tracingChannel = diagnostics_channel.tracingChannel("simple-workflows");
 
