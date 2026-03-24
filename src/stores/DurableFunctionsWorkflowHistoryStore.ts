@@ -101,7 +101,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
 
     private toHex(n: number, padding?: number): string {
         let hex = Number(n).toString(16);
-        padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+        padding = typeof (padding) === "undefined" || padding === null ? 2 : padding;
 
         while (hex.length < padding) {
             hex = "0" + hex;
@@ -423,9 +423,9 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             if (instance.end) {
                 const row: IDurableFunctionsWorkflowHistory & { partitionKey: string; rowKey: string } = {
                     partitionKey: instance.instanceId,
-                    rowKey: this.toHex(rowKey++, 16),
+                    rowKey: this.toHex(rowKey, 16),
                     Name: instance.instanceId,
-                    EventId: eventId++,
+                    EventId: eventId,
                     _Timestamp: this.getDate(instance.end),
                     EventType: "ExecutionCompleted",
                     ExecutionId: instance.instanceId,

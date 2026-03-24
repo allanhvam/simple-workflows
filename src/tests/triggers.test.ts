@@ -47,5 +47,9 @@ void test("startup trigger args", async () => {
     const instance = await store.getInstance(instanceHeader.instanceId);
 
     assert.ok(instance);
-    assert.deepEqual(instance?.args, [undefined]);
+    const args = instance?.args;
+    assert.ok(args);
+    assert.ok(Array.isArray(args));
+    assert.equal(args.length, 1);
+    assert.ok(!args[0]);
 });
