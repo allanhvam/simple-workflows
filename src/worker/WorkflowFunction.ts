@@ -1,4 +1,4 @@
-import { type IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.js";
+import type { IWorkflowHistoryStore } from "../stores/IWorkflowHistoryStore.ts";
 
 export type WorkflowFunction = (...args: any[]) => Promise<any>;
 

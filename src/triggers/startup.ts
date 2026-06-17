@@ -1,4 +1,4 @@
-import type { Trigger } from "../workflows/index.js";
+import type { Trigger } from "../workflows/index.ts";
 
 export const startup = () => {
     return {

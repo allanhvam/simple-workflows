@@ -1,12 +1,12 @@
-import type { GetInstancesOptions, GetInstancesResult, WorkflowActivity, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.js";
+import type { GetInstancesOptions, GetInstancesResult, WorkflowActivity, WorkflowInstance, WorkflowInstanceHeader } from "./IWorkflowHistoryStore.ts";
 import { type GetTableEntityResponse, TableClient, type TableEntity, type TableEntityResult, TableServiceClient, TableTransaction } from "@azure/data-tables";
-import { deserializeError, serializeError } from "../serialization/index.js";
+import { deserializeError, serializeError } from "../serialization/index.ts";
 import { BlobServiceClient, type ContainerClient } from "@azure/storage-blob";
 import zlib from "zlib";
 import { Mutex } from "async-mutex";
-import { type ISerializer } from "../serialization/ISerializer.js";
-import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore.js";
-import { type TokenCredential } from "@azure/core-auth";
+import type { ISerializer } from "../serialization/ISerializer.ts";
+import { SerializedWorkflowHistoryStore } from "./SerializedWorkflowHistoryStore.ts";
+import type { TokenCredential } from "@azure/core-auth";
 
 interface IDurableFunctionsWorkflowHistory {
     Name: string;
@@ -101,7 +101,7 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
 
     private toHex(n: number, padding?: number): string {
         let hex = Number(n).toString(16);
-        padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+        padding = typeof (padding) === "undefined" || padding === null ? 2 : padding;
 
         while (hex.length < padding) {
             hex = "0" + hex;
@@ -423,9 +423,9 @@ export class DurableFunctionsWorkflowHistoryStore extends SerializedWorkflowHist
             if (instance.end) {
                 const row: IDurableFunctionsWorkflowHistory & { partitionKey: string; rowKey: string } = {
                     partitionKey: instance.instanceId,
-                    rowKey: this.toHex(rowKey++, 16),
+                    rowKey: this.toHex(rowKey, 16),
                     Name: instance.instanceId,
-                    EventId: eventId++,
+                    EventId: eventId,
                     _Timestamp: this.getDate(instance.end),
                     EventType: "ExecutionCompleted",
                     ExecutionId: instance.instanceId,

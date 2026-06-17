@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
-import { DefaultRetryPolicy } from "../worker/DefaultRetryPolicy.js";
-import type { WorkflowActivity, WorkflowInstance } from "../stores/IWorkflowHistoryStore.js";
-import { Worker } from "../worker/Worker.js";
-import type { OnlyAsync } from "../types/OnlyAsync.js";
+import { DefaultRetryPolicy } from "../worker/DefaultRetryPolicy.ts";
+import type { WorkflowActivity, WorkflowInstance } from "../stores/IWorkflowHistoryStore.ts";
+import { Worker } from "../worker/Worker.ts";
+import type { OnlyAsync } from "../types/OnlyAsync.ts";
 
 export function proxyActivities<A extends object>(activities: A, options?: { retry?: number }): OnlyAsync<A> {
     if (!activities) {

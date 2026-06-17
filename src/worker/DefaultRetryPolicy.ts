@@ -1,5 +1,5 @@
-import { type IRetryPolicy } from "./IRetryPolicy.js";
-import { sleep } from "../sleep.js";
+import type { IRetryPolicy } from "./IRetryPolicy.ts";
+import { sleep } from "../sleep.ts";
 
 /**
  * @internal

@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { Worker } from "../worker/Worker.js";
-import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
-import { startup } from "./workflows/startup.js";
-import { sleep } from "../sleep.js";
+import { Worker } from "../worker/Worker.ts";
+import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.ts";
+import { startup } from "./workflows/startup.ts";
+import { sleep } from "../sleep.ts";
 
 test.before(async () => {
     const worker = Worker.getInstance();
@@ -47,5 +47,9 @@ void test("startup trigger args", async () => {
     const instance = await store.getInstance(instanceHeader.instanceId);
 
     assert.ok(instance);
-    assert.deepEqual(instance?.args, [undefined]);
+    const args = instance?.args;
+    assert.ok(args);
+    assert.ok(Array.isArray(args));
+    assert.equal(args.length, 1);
+    assert.ok(!args[0]);
 });

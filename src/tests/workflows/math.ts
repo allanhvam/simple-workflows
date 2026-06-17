@@ -1,6 +1,6 @@
-import { manual } from "../../triggers/manual.js";
-import { workflow } from "../../workflows/index.js";
-import { MathService } from "../services/MathService.js";
+import { manual } from "../../triggers/manual.ts";
+import { workflow } from "../../workflows/index.ts";
+import { MathService } from "../services/MathService.ts";
 
 export const math = workflow({
     name: "math",

@@ -1,1 +1,1 @@
-export { math } from "./math.js";
+export { math } from "./math.ts";

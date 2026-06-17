@@ -1,5 +1,5 @@
-import { startup as startupTrigger } from "../../triggers/startup.js";
-import { workflow } from "../../workflows/index.js";
+import { startup as startupTrigger } from "../../triggers/startup.ts";
+import { workflow } from "../../workflows/index.ts";
 
 export const startup = workflow({
     name: "startup",

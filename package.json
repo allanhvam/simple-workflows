@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "type": "module",
   "engines": {
-    "node": ">=18.19.0"
+    "node": ">=20.0.0"
   },
   "repository": {
     "type": "git",
@@ -14,18 +14,20 @@
   "scripts": {
     "build": "npx tsc",
     "build-watch": "npx tsc -w",
-    "test": "node --test",
-    "lint": "eslint ./src/ --ext .ts"
+    "test": "node --test lib/**/*.test.js",
+    "lint": "eslint ./src/"
   },
   "author": "Allan Hvam",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.5.0",
-    "@types/node": "^18.0.0",
+    "@types/node": "^20.0.0",
     "devalue": "^5.6.1",
-    "eslint": "^9.38.0",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-only-warn": "^1.1.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.2",
     "superjson": "^2.2.1",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.46.1"

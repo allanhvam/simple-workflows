@@ -1,8 +1,8 @@
 import js from "@eslint/js";
+import { importX } from "eslint-plugin-import-x";
 import stylistic from "@stylistic/eslint-plugin";
 import eslintConfigPrettier from "eslint-config-prettier";
-import onlyWarn from "eslint-plugin-only-warn";
-import tseslint from "typescript-eslint";
+import { configs } from "typescript-eslint";
 
 /**
  * A shared ESLint configuration for the repository.
@@ -12,7 +12,9 @@ import tseslint from "typescript-eslint";
 export const config = [
     js.configs.recommended,
     eslintConfigPrettier,
-    ...tseslint.configs.recommended,
+    ...configs.recommended,
+    importX.flatConfigs.recommended,
+    importX.flatConfigs.typescript,
     {
         plugins: {
             "@stylistic": stylistic,
@@ -27,11 +29,8 @@ export const config = [
                 allowTemplateLiterals: true,
             }],
             "@stylistic/member-delimiter-style": "error",
-        },
-    },
-    {
-        plugins: {
-            onlyWarn,
+            "@typescript-eslint/no-import-type-side-effects": "error",
+            "import-x/extensions": ["error", "always", { ignorePackages: true, pattern: { ts: "always", js: "never" } }],
         },
     },
     {

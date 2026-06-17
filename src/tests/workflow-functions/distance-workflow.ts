@@ -1,5 +1,5 @@
-import * as activities from "../activities/index.js";
-import { proxyActivities } from "../../proxy/proxyActivities.js";
+import * as activities from "../activities/index.ts";
+import { proxyActivities } from "../../proxy/proxyActivities.ts";
 
 const { getDistance } = proxyActivities(activities, {});
 

@@ -1,4 +1,4 @@
-import { Counters } from "./Counters.js";
+import { Counters } from "./Counters.ts";
 
 export async function callTwice(): Promise<string> {
     const called = Counters.get("call-twice");

@@ -1,2 +1,2 @@
-export { manual } from "./manual.js";
-export { startup } from "./startup.js";
+export { manual } from "./manual.ts";
+export { startup } from "./startup.ts";

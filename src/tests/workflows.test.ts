@@ -1,14 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { Worker } from "../worker/Worker.js";
-import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.js";
-import { math } from "./workflows/math.js";
-import { workflows } from "../workflows/index.js";
-import { addTwo } from "./workflows/add-two.js";
-import { ms } from "../ms.js";
-import { start } from "./workflows/start.js";
-import { promiseLike } from "./workflows/promise-like.js";
-import { publicPart } from "./workflows/public-part.js";
+import { Worker } from "../worker/Worker.ts";
+import { DurableFunctionsWorkflowHistoryStore } from "../stores/index.ts";
+import { math } from "./workflows/math.ts";
+import { workflows } from "../workflows/index.ts";
+import { addTwo } from "./workflows/add-two.ts";
+import { ms } from "../ms.ts";
+import { start } from "./workflows/start.ts";
+import { promiseLike } from "./workflows/promise-like.ts";
+import { publicPart } from "./workflows/public-part.ts";
 
 test.before(async () => {
     const worker = Worker.getInstance();
