@@ -92,6 +92,14 @@ export const workflow = <S extends Record<string, object>, P = void, O = unknown
             await workflow.trigger!.start(workflow, run);
         },
         /**
+         * Stop the workflow trigger
+         */
+        stop: async () => {
+            if (workflow.trigger?.stop) {
+                await workflow.trigger.stop(workflow);
+            }
+        },
+        /**
          * Run workflow
          */
         run: (services: PublicServices) => async (triggerData: P) => {
